@@ -28,10 +28,12 @@
 #   
 #   DEPENDANCE :
 #   - readline, ou libreadline
+#   - CMake 2.6 (voir ci dessous)
 #
 #   UTILISATION :
-#   - Lancez make dans le repertoire des sources puis executez philsh soit :
-#   make && ./philsh (dans un vrai shell :)
+#   - cd philsh puis cmake . et make :)
+#   - lancez le via ./philsh (dans un vrai shell :)
+#   - Si vous n'avez pas cmake, vous pouvez utiliser : make -f old_makefile pour compiler via le make normal :)
 #
 #
 #===========================#
@@ -45,5 +47,14 @@
 #
 # - faites un cd lien_symbolique puis un cd ..
 # - Executez philsh sur un petit terminal
-# 
+#
+#
+#===========#
+# CHANGELOG #
+#===========#
+# Premiere version par Philpep
+# Systeme de compilation via CMake par rhaamo. <markocpc@gmail.com>
+#
+#
+#
 # vim: ts=4 filetype=sh
