@@ -1,0 +1,49 @@
+#=====================================#
+#    ____  _     _ _     _            #
+#   |  _ \| |__ (_) |___| |__         #
+#   | |_) | '_ \| | / __| '_ \        #
+#   |  __/| | | | | \__ \ | | |       #
+#   |_|   |_| |_|_|_|___/_| |_|       #
+#                                     #
+#=====================================#
+#
+# Auteur Philippe Pepiot <philippe.pepiot@gmail.com>
+# Ce code est trop misérable pour être soumis à une licence
+# Donc faites en ce que vous voulez, mais sachez que <readline.h> est
+# sous GPL.
+#
+# Philsh est un interpreteur de commande minimaliste
+# - Il est juste capable de lancer une commande simple
+#   sans redirection ou autres pipes. (mais peut être bientôt il
+#   pourra le faire \o/ )
+# - Il comporte quelques commandes internes comme
+#   cd, pwd, which, env et ls
+# - Il à pour unique but de m'apprendre à programmer
+#   en C et à me servir de svn, de vim, des Makefiles etc.
+# - Si vous lisez ce code, sachez que je n'ai jamais suivis
+#   de cours de programmation (et que je n'en suivrais probablement
+#   jamais), donc si vous voyez une érreur, ou un defaut dans
+#   mes fonction, ou si vous avez un conseil surtout n'hésitez pas à vous 
+#   faire prof et à m'envoyer un mail.
+#   
+#   DEPENDANCE :
+#   - readline, ou libreadline
+#
+#   UTILISATION :
+#   - Lancez make dans le repertoire des sources puis executez philsh soit :
+#   make && ./philsh (dans un vrai shell :)
+#
+#
+#===========================#
+#   _                       #
+#  | |__  _   _  __ _ ___   #
+#  | '_ \| | | |/ _` / __|  #
+#  | |_) | |_| | (_| \__ \  #
+#  |_.__/ \__,_|\__, |___/  #
+#               |___/       #
+#===========================#
+#
+# - faites un cd lien_symbolique puis un cd ..
+# - Executez philsh sur un petit terminal
+# 
+# vim: ts=4 filetype=sh
