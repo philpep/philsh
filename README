@@ -28,12 +28,13 @@
 #   
 #   DEPENDANCE :
 #   - readline, ou libreadline
-#   - CMake 2.6 (voir ci dessous)
+#   - CMake 2.6
+#   - libconfuse
 #
 #   UTILISATION :
 #   - cd philsh puis cmake . et make :)
 #   - lancez le via ./philsh (dans un vrai shell :)
-#   - Si vous n'avez pas cmake, vous pouvez utiliser : make -f old_makefile pour compiler via le make normal :)
+#   - N'oubliez pas de copier philshrc dans ~/.philshrc
 #
 #
 #===========================#
