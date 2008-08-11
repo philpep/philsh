@@ -1,9 +1,10 @@
-#include <stdio.h>
+/*nclude <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
 #include <sys/utsname.h>
-#include "int/internal.h"
+#include "int/internal.h"*/
+#include "headers.h"
 
 char* get_prompt(void)
 {

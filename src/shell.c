@@ -7,21 +7,8 @@
  */
 
 
-/* Les includes qui font bien */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/utsname.h>
-#include <assert.h>
-#include <readline/readline.h>
-#include <readline/history.h>
-
-#include "shell.h"
-#include "int/internal.h"
-
+/* on inclu les headers */
+#include "headers.h"
 
 /* Déclaration des variables globales (à shell.c) */
 /* La saisie de l'utilisateur */
