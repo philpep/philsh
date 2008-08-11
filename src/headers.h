@@ -12,3 +12,5 @@
 #include "shell.h"
 #include "int/internal.h"
 #include "philsh_build.h"
+
+void config_init(void);

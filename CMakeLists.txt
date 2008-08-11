@@ -14,6 +14,7 @@ project(philsh C)
 set(philsh_src
   src/prompt.c
   src/shell.c
+  src/config.c
   src/int/cd.c
   src/int/env.c
   src/int/ls.c
@@ -30,7 +31,8 @@ set(CFLAGS "-W -Wall -ansi")
 set(CMAKE_C_FLAGS ${CFLAGS})
 # Link Libraries
 set(LIBRARIES_TO_LINK 
-  readline)
+  readline
+  confuse)
 target_link_libraries(philsh ${LIBRARIES_TO_LINK})
 # replace strings in configs
 set(PHILSH_VERSION ${VERSION})

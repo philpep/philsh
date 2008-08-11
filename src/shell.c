@@ -48,6 +48,9 @@ void make_argv(void)
 
 int main (void)
 {
+        /* Avant tout on va initialiser la config.. */
+        config_init();
+
 	int i;
 	char*p;
 	/* Le retour du processus fils */
