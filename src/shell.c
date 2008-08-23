@@ -10,6 +10,8 @@
 /* on inclu les headers */
 #include "headers.h"
 
+#define DEBUG
+
 /* Déclaration des variables globales (à shell.c) */
 /* La saisie de l'utilisateur */
 char * saisie;
@@ -26,7 +28,7 @@ char *chemin;
  * et rentre les arguments dans
  * cmd_argv */
 /* TODO : Gerer les cas ou il y a des '"' */
-void make_argv(void)
+void make_argv_old(void)
 {
 
 	int i = 0;
@@ -46,11 +48,71 @@ void make_argv(void)
 }
 
 
+/* Nouvelle version de la fonction
+ * de traitement de la saisie
+ * Elle prend en compte les "
+ * --> TODO  debugger */
+/* En fait je ne suis pas vraiment sur
+ * d'avoir compris le principe des
+ * ""... */
+void make_argv(char *str, int i)
+{
+	char *p = str;
+	if ((str == NULL)||(*p == '\0'))
+		return;
+	if (*p != '"')
+	{
+		p = strchr(str, ' ');
+		if (p == NULL)
+		{
+			cmd_argv[i] = malloc(sizeof(char) * (1+strlen(str)));
+			assert(cmd_argv[i] != NULL);
+			strcpy(cmd_argv[i], str);
+#ifdef DEBUG
+			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
+#endif
+			return;
+		}
+		cmd_argv[i] = malloc(sizeof(char) * (1+p-str));
+		assert(cmd_argv[i] != NULL);
+		memcpy(cmd_argv[i], str, p-str);
+		cmd_argv[i][p-str] = '\0';
+#ifdef DEBUG
+			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
+#endif
+			while(*p == ' ')
+				p++;
+		return make_argv(p, i+1);
+	}
+	/* Si on est arrivé ici, c'est que
+	 * str contient un "
+	 */
+	p = strchr(str+1, '"'); /* On cherche le 2ème " */
+	if (p == NULL)
+	{
+		fprintf(stderr, "Il manque un \" dans votre saisie\n");
+		return;
+	}
+	cmd_argv[i] = malloc(sizeof(char) * (p-str));
+	assert(cmd_argv[i] != NULL);
+	memcpy(cmd_argv[i], str+1, p-str-1);
+	cmd_argv[i][p-str] = '\0';
+#ifdef DEBUG
+			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
+#endif
+			while(*(p+1) == ' ')
+				p++;
+			return make_argv(p+1, i+1);
+	
+}
+
+
 int main (void)
 {
         /* Avant tout on va initialiser la config.. */
-        config_init();
-
+	/* TODO : debugger cette fonction -> config.c
+	 * config_init();
+	 */
 	int i;
 	char*p;
 	/* Le retour du processus fils */
@@ -76,7 +138,13 @@ int main (void)
 		if (cmd_argc != 0)
 		{
 			cmd_argv = malloc (sizeof(char *) * (cmd_argc+1));
-			make_argv();
+			/* pour envoyer la première lettre
+			 * du premier mot à make_argv()
+			 */
+			p = saisie;
+			while(*p == ' ')
+				p++;
+			make_argv(p, 0);
 			cmd_argv[cmd_argc] = NULL;
 			valeur_retour = exec_cmd();
 			/* On libère la memoire */
@@ -139,7 +207,7 @@ int exec_cmd(void)
 		else if (!strcmp(cmd_argv[0], "env"))
 			valeur_retour = internal_env();
 		/* Si on à affaire à un ./ ou un exec */
-		else if ((cmd_argv[0][0] == '.')&&(cmd_argv[0][1] == '/'))
+		else if ( (cmd_argv[0][0] == '.')&&(cmd_argv[0][1] == '/') )
 		{
 			chemin = get_current_dir();
 			chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(cmd_argv[0])));

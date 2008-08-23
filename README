@@ -48,6 +48,7 @@
 #
 # - faites un cd lien_symbolique puis un cd ..
 # - Executez philsh sur un petit terminal
+# - Lancez la commande suivante : echo "ls " s
 #
 #
 #===========#
