@@ -10,7 +10,6 @@
 /* on inclu les headers */
 #include "headers.h"
 
-#define DEBUG
 
 /* Déclaration des variables globales (à shell.c) */
 /* La saisie de l'utilisateur */
@@ -39,7 +38,7 @@ void make_argv_old(void)
 		assert(cmd_argv[i] != NULL);
 		strcpy(cmd_argv[i], p);
 #ifdef DEBUG
-		printf("argv[%d] = '%s'\n", i, cmd_argv[i]);
+		printf("\t\t\033[34margv[%d] = '%s'\n\033[37m", i, cmd_argv[i]);
 #endif
 		i++;
 		p = strtok(NULL, " ");
@@ -52,14 +51,11 @@ void make_argv_old(void)
  * de traitement de la saisie
  * Elle prend en compte les "
  * --> TODO  debugger */
-/* En fait je ne suis pas vraiment sur
- * d'avoir compris le principe des
- * ""... */
-void make_argv(char *str, int i)
+int make_argv(char *str, int i)
 {
 	char *p = str;
 	if ((str == NULL)||(*p == '\0'))
-		return;
+		return --i;
 	if (*p != '"')
 	{
 		p = strchr(str, ' ');
@@ -68,18 +64,12 @@ void make_argv(char *str, int i)
 			cmd_argv[i] = malloc(sizeof(char) * (1+strlen(str)));
 			assert(cmd_argv[i] != NULL);
 			strcpy(cmd_argv[i], str);
-#ifdef DEBUG
-			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
-#endif
-			return;
+			return i;
 		}
 		cmd_argv[i] = malloc(sizeof(char) * (1+p-str));
 		assert(cmd_argv[i] != NULL);
 		memcpy(cmd_argv[i], str, p-str);
 		cmd_argv[i][p-str] = '\0';
-#ifdef DEBUG
-			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
-#endif
 			while(*p == ' ')
 				p++;
 		return make_argv(p, i+1);
@@ -91,19 +81,18 @@ void make_argv(char *str, int i)
 	if (p == NULL)
 	{
 		fprintf(stderr, "Il manque un \" dans votre saisie\n");
-		return;
+		return --i;
 	}
 	cmd_argv[i] = malloc(sizeof(char) * (p-str));
 	assert(cmd_argv[i] != NULL);
 	memcpy(cmd_argv[i], str+1, p-str-1);
-	cmd_argv[i][p-str] = '\0';
-#ifdef DEBUG
-			printf("cmd_argv[%d] = '%s'\n", i, cmd_argv[i]);
-#endif
-			while(*(p+1) == ' ')
-				p++;
-			return make_argv(p+1, i+1);
-	
+	cmd_argv[i][p-str-1] = '\0';
+	while(*(p+1) == ' ')
+		p++;
+	if (*p == '\0')
+		return i;
+	else
+		return make_argv(p+1, i+1);
 }
 
 
@@ -130,10 +119,6 @@ int main (void)
 			if ((*p != ' ')&&((*(p+1) == '\0')||(*(p+1) == ' ')))
 				cmd_argc++;
 		}
-#ifdef DEBUG
-		printf("saisie = '%s'\ncmd_argc = '%d'\n", saisie, cmd_argc);
-#endif
-
 		/* Si la saisie est non nulle */
 		if (cmd_argc != 0)
 		{
@@ -144,11 +129,18 @@ int main (void)
 			p = saisie;
 			while(*p == ' ')
 				p++;
-			make_argv(p, 0);
-			cmd_argv[cmd_argc] = NULL;
+			cmd_argc = make_argv(p, 0);
+			cmd_argv[++cmd_argc] = NULL;
 			valeur_retour = exec_cmd();
 			/* On libère la memoire */
-			for (i = 0; i < cmd_argc; free(cmd_argv[i]), i++);
+			for (i = 0; i < cmd_argc; i++)
+			{
+#ifdef DEBUG
+				printf("\t\t\033[34m saisie = '%s'\n\033[37m", saisie);
+				printf("\t\t\033[34m cmd_argv[%d] = '%s'\n\033[37m", i, cmd_argv[i]);
+#endif
+				free(cmd_argv[i]);
+			}
 			free(cmd_argv);
 		}
 		free(saisie);
@@ -185,7 +177,7 @@ int exec_cmd(void)
 		 * se termine */
 		processus_fils = wait(NULL);
 #ifdef DEBUG
-		printf("Fin du processus de PID = %d\n", processus_fils);
+		printf("\t\t\033[31m Fin du processus de PID = %d\n\033[37m", processus_fils);
 #endif
 	}
 	else if (pid == 0)
@@ -228,7 +220,7 @@ int exec_cmd(void)
 				execv(chemin, cmd_argv);
 		}
 #ifdef DEBUG
-		printf("Valeur retour dans le fork = '%d'\n", valeur_retour);
+		printf("\t\t\033[31m Valeur retour dans le fork = '%d'\n\033[37m", valeur_retour);
 #endif
 		exit(valeur_retour);
 	}

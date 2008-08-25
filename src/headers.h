@@ -1,3 +1,6 @@
+#ifndef HEADERS
+#define HEADERS
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -14,3 +17,7 @@
 #include "philsh_build.h"
 
 void config_init(void);
+
+#define DEBUG
+
+#endif
