@@ -16,6 +16,10 @@
 # - Il est juste capable de lancer une commande simple
 #   sans redirection ou autres pipes. (mais peut être bientôt il
 #   pourra le faire \o/ )
+# - NOUVEAU : philsh est capable d'executer des
+#   commandes en arrière plan, pour cela
+#   il suffit de faire comme d'habitude avec
+#   le signe & à la fin de votre saisie.
 # - Il comporte quelques commandes internes comme
 #   cd, pwd, which, env et ls
 # - Il à pour unique but de m'apprendre à programmer
@@ -48,7 +52,7 @@
 #
 # - faites un cd lien_symbolique puis un cd ..
 # - Executez philsh sur un petit terminal
-# - Lancez la commande suivante : echo "ls " s
+# - Faites un ctrl-z sur un processus fils...
 #
 #
 #===========#

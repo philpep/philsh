@@ -133,10 +133,12 @@ int main (void)
 			cmd_argv[++cmd_argc] = NULL;
 			valeur_retour = exec_cmd();
 			/* On libère la memoire */
+#ifdef DEBUG
+				printf("\t\t\033[34m saisie = '%s'\n\033[37m", saisie);
+#endif
 			for (i = 0; i < cmd_argc; i++)
 			{
 #ifdef DEBUG
-				printf("\t\t\033[34m saisie = '%s'\n\033[37m", saisie);
 				printf("\t\t\033[34m cmd_argv[%d] = '%s'\n\033[37m", i, cmd_argv[i]);
 #endif
 				free(cmd_argv[i]);
@@ -155,8 +157,26 @@ int main (void)
 int exec_cmd(void)
 {
 	int valeur_retour;
-	int processus_fils;
+	char *p;
 	char *chemin_cmd_locale = NULL;
+	int bg = 0;
+	/* bg = 1 : commande en backgroud */
+	p = &cmd_argv[cmd_argc-1][strlen(cmd_argv[cmd_argc-1])-1];
+	if(*p == '&')
+	{
+		bg = 1;
+		/* Il faut distinguer
+		 * truc machin& et
+		 * truc machin &
+		 */
+		if (p == cmd_argv[cmd_argc-1])
+		{
+			cmd_argc--;
+			cmd_argv[cmd_argc] = NULL;
+		}
+		else
+			*p = '\0';
+	}
 	/* Si la commande est exit : quitter le shell */
 	if (!strcmp(cmd_argv[0], "exit"))
 		exit(0);
@@ -170,17 +190,7 @@ int exec_cmd(void)
 		return internal_setenv(cmd_argv[0]);
 	/* On crée le fork */
 	pid_t pid = fork();
-	if (pid > 0)
-	{
-		/* Processus père :
-		 * il attend que le processus fils
-		 * se termine */
-		processus_fils = wait(NULL);
-#ifdef DEBUG
-		printf("\t\t\033[31m Fin du processus de PID = %d\n\033[37m", processus_fils);
-#endif
-	}
-	else if (pid == 0)
+	if (pid == 0)
 	{
 		/* Pocessus fils, si la commande est interne à philsh
 		 * elle est executé
@@ -188,6 +198,15 @@ int exec_cmd(void)
 		 * par execvp.
 		 * Le processus fils doit absolument se terminer
 		 * sinon, on crée des processus infiniment :) */
+		/* S'il faut lancer en backgroud */
+		if(bg)
+		{
+			int null = open("/dev/null", O_RDONLY);
+			if (null == -1)
+				exit(1);
+			dup2(null, 0);
+			signal(SIGINT, SIG_IGN);
+		}
 		if (!strcmp(cmd_argv[0], "pwd"))
 			valeur_retour = internal_pwd(cmd_argc, cmd_argv);
 		else if (!strcmp(cmd_argv[0], "which"))
@@ -206,26 +225,71 @@ int exec_cmd(void)
 			assert(chemin_cmd_locale != NULL);
 			sprintf(chemin_cmd_locale, "%s/%s", chemin, cmd_argv[0]+2);
 			valeur_retour = execv (chemin_cmd_locale, cmd_argv);
-			/* Est ce utile  ? Le execv termine le processus... */
-			free(chemin_cmd_locale);
-			free(chemin);
 		}
 		else
 		{
 			/* Si la commande est externe */
-			/* TODO : recuperer la valeur de retour du execv */
 			if (which_cmd (cmd_argv[0]) != 0)
 				fprintf(stderr, "Philsh : %s commande inconue\n", cmd_argv[0]);
 			else
 				execv(chemin, cmd_argv);
+			/* TODO : recuperer la valeur de retour du execv */
+			/* Si le execv n'a pas terminé le processus fils */
+			exit(1);
 		}
-#ifdef DEBUG
-		printf("\t\t\033[31m Valeur retour dans le fork = '%d'\n\033[37m", valeur_retour);
-#endif
 		exit(valeur_retour);
 	}
-	/* Si le fork() à planté on quitte philsh brutalement */
-	else
-		abort();
+	else if (pid != -1 && !bg)
+	{
+		/* Processus père
+		 * Il attent que le processus fils
+		 * se termine */
+		signal(SIGINT, SIG_IGN);
+		while(!WaitForChild(pid));
+		signal(SIGINT, HandleInterrupt);
+	}
 	return valeur_retour;
+}
+
+/* Cette fonction est encore inconue pour
+ * moi, mais elle marche plutot bien,
+ * a découvrir...
+ */
+int WaitForChild(pid_t pid)
+{
+	pid_t cpid;
+	int st;
+	for (;;)
+	{
+		/* Attendre la mort d'un fils. */
+		pid_t cpid = wait(&st);
+		if (cpid == -1)
+		{
+			if (errno == ECHILD)
+				break;
+			else if (errno == EINTR) 
+				continue;
+			else
+				exit(1);
+		}
+		if (WIFEXITED(st) || WIFSIGNALED(st))
+		{
+			if (cpid == pid) /* Le fils attendu est mort */
+				return 1;
+			else 
+				printf("\033[31m\t\tTerminé: pid=%d\n\033[37m", cpid);
+		}
+		else if (WIFSTOPPED(st)) 
+			printf("\033[31m\t\tStoppé: pid=%d\n\033[37m", cpid);
+	}
+	return 0;
+}
+
+
+void HandleInterrupt(int sig)
+{
+  printf("\n");
+
+  /* Reinstaller la routine. */
+  signal(SIGINT, HandleInterrupt);
 }
