@@ -102,6 +102,11 @@ int which(char **argv, int a, int ret)
 {
 	if(argv[0] == NULL)
 		return ret;
+	if(getenv("PATH") == NULL)
+	{
+		fprintf(stderr, "La variable d'environement PATH n'existe pas !\nImpossible de trouver %s\n", argv[0]);
+		return -1;
+	}
 	int bingo = 0;
 	char *command = argv[0];
 	char *path;

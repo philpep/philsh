@@ -3,9 +3,11 @@
 #include <unistd.h>
 #include <assert.h>
 #include <string.h>
-#include <sys/wait.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/wait.h>
+#include <sys/stat.h> /* for open() */
+#include <sys/time.h> /* for fexecve */
 #include "exec.h"
 #include "int/internal.h"
 #include "shell.h" /* Pour options_philsh() */
@@ -139,6 +141,17 @@ int exec_cmd(int argc, char **argv)
 		{
 			if (argv[0][0] == '_')
 				argv[0]++;
+			else if (argv[0][0] == '/')
+			{
+				int file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
+				extern char **environ;
+				if ((errno == EACCES)||(file == -1))
+				{
+					fprintf(stderr, "Philsh: %s permission refusée\n", argv[0]);
+					exit(EACCES);
+				}
+				fexecve(file, argv, environ);
+			}
 			/* Si la commande est externe */
 			if (which_cmd (argv[0]) != 0)
 				fprintf(stderr, "Philsh : %s commande inconue\n", argv[0]);
@@ -274,6 +287,11 @@ lljobs *del_job(lljobs *liste, pid_t pid)
 
 int afficher_liste_jobs(lljobs *liste)
 {
+	if (liste == NULL)
+	{
+		printf("Pas de jobs en cours\n");
+		return 0;
+	}
 	struct lljobs *tmp;
 	tmp = liste;
 	while(tmp != NULL)

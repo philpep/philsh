@@ -17,5 +17,7 @@ struct lljobs
 lljobs *add_job(lljobs *liste, char *name, pid_t pid);
 int afficher_liste_jobs(lljobs *liste);
 lljobs *del_job(lljobs *liste, pid_t pid);
+/* Declarations externes */
+int fexecve(int fd, char *const argv[], char *const envp[]);
 
 #endif
