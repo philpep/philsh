@@ -5,7 +5,6 @@
 #include <string.h>
 #include "internal.h"
 
-int setenv (const char *name, const char *value, int overwrite);
 /* Commande qui va chercher le repertoire
  * absolu dans lequel on est.
  * NE PAS OUBLIER DE LIBERER LA MEMOIRE */
@@ -42,7 +41,11 @@ int internal_pwd(int argc, char **argv)
 		fprintf(stderr, "Philsh : Option inconue : %s\n", argv[1]);
 		return -1;
 	}
-	printf("%s\n", get_current_dir());
+	char *current_dir;
+	current_dir = get_current_dir();
+	assert(current_dir != NULL);
+	printf("%s\n", current_dir);
+	free(current_dir);
 	return 0;
 }
 

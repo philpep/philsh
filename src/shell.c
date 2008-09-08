@@ -12,8 +12,6 @@
 
 
 /* Déclaration des variables globales (à shell.c) */
-/* La saisie de l'utilisateur */
-char * saisie;
 /* les arguments de la saisie */
 char **cmd_argv;
 /* le nombre d'arguments dans la saisie */
@@ -23,89 +21,121 @@ char *prompt;
 /* le chemin de l'executable par exemple /bin/echo */
 char *chemin;
 
-/* Coupe saisie suivant les espaces
- * et rentre les arguments dans
- * cmd_argv */
-/* TODO : Gerer les cas ou il y a des '"' */
-void make_argv_old(void)
+void init_env(void)
 {
-
-	int i = 0;
-	char *p = strtok(saisie, " ");
-	while ((p != NULL))
-	{
-		cmd_argv[i] = malloc (sizeof(char) * (1+strlen(p)));
-		assert(cmd_argv[i] != NULL);
-		strcpy(cmd_argv[i], p);
-#ifdef DEBUG
-		printf("\t\t\033[34margv[%d] = '%s'\n\033[37m", i, cmd_argv[i]);
-#endif
-		i++;
-		p = strtok(NULL, " ");
-	}
+	uid_t uid = getuid();
+	struct passwd *user;
+	user = getpwuid(uid);
+	setenv("HOME", user->pw_dir, 0);
 	return;
 }
 
-
-/* Nouvelle version de la fonction
- * de traitement de la saisie
- * Elle prend en compte les "
- * --> TODO  debugger */
-int make_argv(char *str, int i)
+/* Cette fonction decoupe la saisie suivant les
+ * espaces ou les guillemets, elle alloue le tout dans argv
+ * Elle renvoie le dernier entier alloué (on s'en sert pour bien
+ * liberer la memoire ensuite) */
+int parse_saisie(char *saisie, size_t buf_size, char **argv)
 {
-	char *p = str;
-	if ((str == NULL)||(*p == '\0'))
-		return --i;
-	if (*p != '"')
+	char *p;
+	p = saisie;
+	char *buffer;
+	int gui = 0;
+	size_t i = 0, j = 0;
+	buffer = malloc(sizeof(char) * buf_size+2);
+	assert(buffer != NULL);
+	while(*p == ' ')
+		p++;
+	for(;*p != '\0'; p++)
 	{
-		p = strchr(str, ' ');
-		if (p == NULL)
+		assert(i < buf_size+2);
+		if(*p == '"')
 		{
-			cmd_argv[i] = malloc(sizeof(char) * (1+strlen(str)));
-			assert(cmd_argv[i] != NULL);
-			strcpy(cmd_argv[i], str);
-			return i;
+			gui = (gui) ? 0 : 1;
+			continue;
 		}
-		cmd_argv[i] = malloc(sizeof(char) * (1+p-str));
-		assert(cmd_argv[i] != NULL);
-		memcpy(cmd_argv[i], str, p-str);
-		cmd_argv[i][p-str] = '\0';
+		if((*p == ' ')&&(!gui))
+		{
+			buffer[i] = '\0';
+			argv[j] = malloc(sizeof(char) * (1+strlen(buffer)));
+			assert(argv[j] != NULL);
+			strcpy(argv[j], buffer);
+#ifdef DEBUG
+			printf("argv[%d] = '%s'\n", j, argv[j]);
+#endif
+			i = 0;
+			j++;
 			while(*p == ' ')
 				p++;
-		return make_argv(p, i+1);
+			p--;
+			continue;
+		}
+		buffer[i] = *p;
+		i++;
 	}
-	/* Si on est arrivé ici, c'est que
-	 * str contient un "
-	 */
-	p = strchr(str+1, '"'); /* On cherche le 2ème " */
-	if (p == NULL)
-	{
-		fprintf(stderr, "Il manque un \" dans votre saisie\n");
-		return --i;
-	}
-	cmd_argv[i] = malloc(sizeof(char) * (p-str));
-	assert(cmd_argv[i] != NULL);
-	memcpy(cmd_argv[i], str+1, p-str-1);
-	cmd_argv[i][p-str-1] = '\0';
-	while(*(p+1) == ' ')
-		p++;
-	if (*p == '\0')
-		return i;
-	else
-		return make_argv(p+1, i+1);
+	buffer[i] = '\0';
+	argv[j] = malloc(sizeof(char) * (1+strlen(buffer)));
+	assert(argv[j] != NULL);
+	strcpy(argv[j], buffer);
+#ifdef DEBUG
+	printf("argv[%d] = '%s'\n", j, argv[j]);
+#endif
+	free(buffer);
+	return j;
 }
 
-
-int main (void)
+/* Cette fonction compte les mots dans saisie
+ * en prenant en compte les espaces et les guillemets,
+ * elle en profite pour rentrer la taille du mot le plus
+ * long dans lenght (pour fixer la taille du buffer ensuite...)
+ */
+int compter_mots(char *saisie, size_t *lenght)
 {
+	char *p = saisie;
+	int words = 0;
+	size_t lenght_current = 0;
+	size_t lenght_max = 0;
+	int gui = 0;
+	while(*p == ' ')
+		p++;
+	if(*p != '\0')
+		words++;
+	for(;*p != '\0';p++)
+	{
+		if(*p == '"')
+		{
+			gui = (gui) ? 0 : 1;
+			continue;
+		}
+		if((*p == ' ')&&(!gui))
+		{
+			if (lenght_current > lenght_max)
+				lenght_max = lenght_current;
+			lenght_current = 0;
+			words++;
+			while(*p == ' ')
+				p++;
+			p--;
+			continue;
+		}
+		lenght_current++;
+	}
+	if (lenght_current > lenght_max)
+		lenght_max = lenght_current;
+	*lenght = lenght_max;
+	return words;
+}
+
+int main (int argc, char **argv)
+{
+	options_philsh(argc, argv);
         /* Avant tout on va initialiser la config.. */
 	/* TODO : debugger cette fonction -> config.c
 	 * config_init();
 	 */
+	init_env();
 	int i;
-	char*p;
-	/* Le retour du processus fils */
-	int valeur_retour;
+	size_t buf_size;
+	char *saisie;
 	/* La super boucle du phil shell */
 	for (;;)
 	{
@@ -113,36 +143,19 @@ int main (void)
 		prompt = get_prompt();
 		/* La fonction readline est magique */
 		saisie = readline(prompt);
-		/* On compte le nombres de mots dans saisie */
-		for (p = saisie; *p != '\0'; p++)
-	        {
-			if ((*p != ' ')&&((*(p+1) == '\0')||(*(p+1) == ' ')))
-				cmd_argc++;
-		}
+		free(prompt);
+		cmd_argc = compter_mots(saisie, &buf_size);
 		/* Si la saisie est non nulle */
 		if (cmd_argc != 0)
 		{
 			cmd_argv = malloc (sizeof(char *) * (cmd_argc+1));
-			/* pour envoyer la première lettre
-			 * du premier mot à make_argv()
-			 */
-			p = saisie;
-			while(*p == ' ')
-				p++;
-			cmd_argc = make_argv(p, 0);
-			cmd_argv[++cmd_argc] = NULL;
-			valeur_retour = exec_cmd();
-			/* On libère la memoire */
-#ifdef DEBUG
-				printf("\t\t\033[34m saisie = '%s'\n\033[37m", saisie);
-#endif
+
+			cmd_argc = parse_saisie(saisie, buf_size, cmd_argv);
+			cmd_argc++;
+			cmd_argv[cmd_argc] = NULL;
+			exec_cmd(cmd_argc, cmd_argv);
 			for (i = 0; i < cmd_argc; i++)
-			{
-#ifdef DEBUG
-				printf("\t\t\033[34m cmd_argv[%d] = '%s'\n\033[37m", i, cmd_argv[i]);
-#endif
 				free(cmd_argv[i]);
-			}
 			free(cmd_argv);
 		}
 		free(saisie);
@@ -150,146 +163,99 @@ int main (void)
 	return 0;
 }
 
-/* La fonction qui execute la commande
- * en créant un processus fils
- * Elle renvoie la valeur de retour
- * du processus fils */
-int exec_cmd(void)
+void options_philsh(int argc, char **argv)
 {
-	int valeur_retour;
-	char *p;
-	char *chemin_cmd_locale = NULL;
-	int bg = 0;
-	/* bg = 1 : commande en backgroud */
-	p = &cmd_argv[cmd_argc-1][strlen(cmd_argv[cmd_argc-1])-1];
-	if(*p == '&')
+	const char *optstring = "hv";
+	static struct option philsh_option[] =
 	{
-		bg = 1;
-		/* Il faut distinguer
-		 * truc machin& et
-		 * truc machin &
-		 */
-		if (p == cmd_argv[cmd_argc-1])
-		{
-			cmd_argc--;
-			cmd_argv[cmd_argc] = NULL;
-		}
-		else
-			*p = '\0';
-	}
-	/* Si la commande est exit : quitter le shell */
-	if (!strcmp(cmd_argv[0], "exit"))
-		exit(0);
-	/* Si la commande est cd, on ne l'execute pas
-	 * dans le fork, sinon le changement de repertoire
-	 * s'effectue dans le processus fils :) */
-	if (!strcmp(cmd_argv[0], "cd"))
-		return internal_cd(cmd_argc, cmd_argv);
-	/* Meme remaque */
-	else if (strchr(cmd_argv[0], '='))
-		return internal_setenv(cmd_argv[0]);
-	/* On crée le fork */
-	pid_t pid = fork();
-	if (pid == 0)
+		{"help", 0, NULL, 'h'},
+		{"version", 0, NULL, 'v'},
+		{0, 0, 0, 0}
+	};
+	char opt;
+	while (EOF != (opt = getopt_long(argc, argv, optstring, philsh_option, NULL)))
 	{
-		/* Pocessus fils, si la commande est interne à philsh
-		 * elle est executé
-		 * si la commande est externe, elle est executé
-		 * par execvp.
-		 * Le processus fils doit absolument se terminer
-		 * sinon, on crée des processus infiniment :) */
-		/* S'il faut lancer en backgroud */
-		if(bg)
+		if (opt == 'v')
 		{
-			int null = open("/dev/null", O_RDONLY);
-			if (null == -1)
-				exit(1);
-			dup2(null, 0);
-			signal(SIGINT, SIG_IGN);
+			printf("Philsh %s, Compilé par %s sur une machine %s avec les flags %s\
+ et avec les librairies %s\nPour tout commentaire, pour des bugs, pour me remercier (si si, je suis\
+ serieux ^^) ----> %s\n", PHILSH_VERSION, PHILSH_COMPILE_BY, PHILSH_COMPILE_MACHINE, PHILSH_COMPILE_FLAGS, PHILSH_LINKED_LIBS, PHILSH_MAIL);
+			exit(0);
 		}
-		if (!strcmp(cmd_argv[0], "pwd"))
-			valeur_retour = internal_pwd(cmd_argc, cmd_argv);
-		else if (!strcmp(cmd_argv[0], "which"))
-			valeur_retour = internal_which(cmd_argc, cmd_argv);
-		else if (!strcmp(cmd_argv[0], "ls"))
-			valeur_retour = internal_ls(cmd_argc, cmd_argv);
-		else if (!strcmp(cmd_argv[0], "uname"))
-			valeur_retour = internal_uname(cmd_argc, cmd_argv);
-		else if (!strcmp(cmd_argv[0], "env"))
-			valeur_retour = internal_env();
-		/* Si on à affaire à un ./ ou un exec */
-		else if ( (cmd_argv[0][0] == '.')&&(cmd_argv[0][1] == '/') )
+		else if(opt == 'h')
 		{
-			chemin = get_current_dir();
-			chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(cmd_argv[0])));
-			assert(chemin_cmd_locale != NULL);
-			sprintf(chemin_cmd_locale, "%s/%s", chemin, cmd_argv[0]+2);
-			valeur_retour = execv (chemin_cmd_locale, cmd_argv);
+			afficher_aide();
+			exit(0);
 		}
-		else
-		{
-			/* Si la commande est externe */
-			if (which_cmd (cmd_argv[0]) != 0)
-				fprintf(stderr, "Philsh : %s commande inconue\n", cmd_argv[0]);
-			else
-				execv(chemin, cmd_argv);
-			/* TODO : recuperer la valeur de retour du execv */
-			/* Si le execv n'a pas terminé le processus fils */
-			exit(1);
-		}
-		exit(valeur_retour);
 	}
-	else if (pid != -1 && !bg)
-	{
-		/* Processus père
-		 * Il attent que le processus fils
-		 * se termine */
-		signal(SIGINT, SIG_IGN);
-		while(!WaitForChild(pid));
-		signal(SIGINT, HandleInterrupt);
-	}
-	return valeur_retour;
+	return;
 }
 
-/* Cette fonction est encore inconue pour
- * moi, mais elle marche plutot bien,
- * a découvrir...
- */
-int WaitForChild(pid_t pid)
+void afficher_aide(void)
 {
-	pid_t cpid;
-	int st;
-	for (;;)
-	{
-		/* Attendre la mort d'un fils. */
-		pid_t cpid = wait(&st);
-		if (cpid == -1)
-		{
-			if (errno == ECHILD)
-				break;
-			else if (errno == EINTR) 
-				continue;
-			else
-				exit(1);
-		}
-		if (WIFEXITED(st) || WIFSIGNALED(st))
-		{
-			if (cpid == pid) /* Le fils attendu est mort */
-				return 1;
-			else 
-				printf("\033[31m\t\tTerminé: pid=%d\n\033[37m", cpid);
-		}
-		else if (WIFSTOPPED(st)) 
-			printf("\033[31m\t\tStoppé: pid=%d\n\033[37m", cpid);
-	}
-	return 0;
+
+			printf("PHILSH version %s\n\
+philsh [OPTION]...\n\
+       -h, --help                           afficher l'aide\n\
+       -v, --version                        afficher le nom et la version du logiciel\n\
+\n\
+<[HISTORIQUE]>\n\
+Philsh est un shell minimaliste, écrit par Philippe Pepiot,\n\
+étudiant en 3ème année de Mathématiques à Toulouse,\n\
+qui à décidé d'apprendre le C sur internet et avec les pages de manuel.\n\
+Philippe avait besoin de mettre en pratique ses maigres connaissances en C\n\
+donc il s'est lancé dans le projet de faire un shell inutile, mais marrant.\n\
+Le but premier est de coder, n'importe quoi pourvu que ce soit (marrant|instructif)\n\
+Plus tard, il montre son code à rhaamo qui lui confectionne un systeme de compilation\n\
+plus performant avec cmake. rhaamo lui apprend aussi les joie de git, et lui\n\
+donne un depot git (git://tux-atome.fr/philsh.git)\n\
+\n\
+<[FONCTIONALITÉES]>\n\
+Philsh fonctionne comme n'importe quel shell (zsh|bash|sh), mais avec quelques\n\
+problèmes au niveau de l'interprétation des caractères suivants : '$>|* , le \" est\n\
+partièlement géré.\n\
+En gros ça veut dire que les redirections (>, <, >> et <<) ne fonctionnent pas encore\n\
+et que les pipes (|) non plus. Les conditions (&& et ||) ne sont pas gérées non plus.\n\
+Le remplacement des variables d'environnements ($) par leurs valeurs et la gestion de (*)\n\
+ne marchent pas mais c'est un des objectifs prioritaires de philsh.\n\
+Par contre depuis la version 0.2, la mise en backgroud des procéssus avec & fonctionne\n\
+et la gestion des signaux fonctionne partiellement\n\
+Philsh comporte des build-in commandes : %s ; ls n'y est pas encore (il était présent\n\
+dans la version 0.1 mais le code n'était pas de moi donc ça compte pas :-)\n\
+Il n'y a pas non plus de boucles possible (if, then, else, fi, for, do, done, while)\n\
+Philsh à pour but la complexité, donc tout (le maximum possible) est alloué dynamiquement\n\
+et philsh est surement le shell le plus léger en memoire (c'est la classe de dire ça ^^)\n\
+\n\
+<[BUGS]> pardon <[FONCTIONALITÉES SPÉCIALES]>\n\
+Plus philsh commence à grossir, plus il y à de bugs et plus les defauts de conception\n\
+se font sentirs. Je pense à une reécriture complete du code pour plus de lisibilité\n\
+et pour plus de flexibilitée des fonctions...\n\
+Sur certains systèmes, philsh n'arrive pas à s'executer (segment fault), donc si vous\n\
+ètes dans ce cas, contactez moi (addresse plus bas) pour que je comprenne ou se trouve le problème car sur\n\
+d'autres systèmes, tout marche bien...\n\
+\033[36mLa commande cd comporte le bug suivant : quand vous vous déplacez sur un lien\n\
+symbolique, il croit que vous ètes dans le path absolu, du coup un petit cd .. et vous\n\
+vous retrouvez dans le repertoire parent du path absolu et non dans le path de départ\n\
+\n\
+Sur les petits terminaux, si la commande est trop longue, elle ecrase le prompt puis\n\
+le début de la commande, je pense que c'est un réglage à faire dans readline...\n\
+\n\
+La suspenssion d'un processus avec ctrl-z ne marche pas, c'est philsh qui est suspendu...\n\033[37m\
+\n\
+\n\
+<[AIDER PHILSH]>\n\
+La programmation de philsh est ouverte à tous, faites vous connaitre et rhaamo pourra\n\
+décider de vous donner accées au modifications sur le depot git.\n\
+Pour avoir la dernière version de philsh : git clone git://tux-atome.fr/philsh.git\n\
+\n\
+\n\
+<[CONTACT]>\n\
+Vous pouvez contacter les auteurs par mail :\n\
+Philippe Pepiot alias philpep %s\n\
+rhaamo <markocpc@gmail.com>\n\
+<%s>\n\
+\n\n\n", PHILSH_VERSION, PHILSH_BUILDIN, PHILSH_MAIL, PHILSH_HTTP);
+			return;
 }
 
 
-void HandleInterrupt(int sig)
-{
-  printf("\n");
-
-  /* Reinstaller la routine. */
-  signal(SIGINT, HandleInterrupt);
-}

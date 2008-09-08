@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <pwd.h>
 #include <signal.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,10 +15,12 @@
 #include <assert.h>
 #include <readline/readline.h>
 #include <readline/history.h>
+#include <getopt.h>
 
 #include "shell.h"
 #include "int/internal.h"
 #include "philsh_build.h"
+#include "exec.h"
 
 void config_init(void);
 

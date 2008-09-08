@@ -1,7 +1,16 @@
+/* Ce fichier comporte un default,
+ * il change le HOME.
+ * Il n'est pas utilisé pour le moment
+ */
 #include <stdio.h>
 #include <confuse.h>
 #include <stdlib.h>
 #include <string.h>
+/* Pour ne pas utiliser getenv("HOME") */
+#include <unistd.h>
+#include <pwd.h>
+#include <sys/types.h>
+/*********/
 
 #define DEFAULT_PROMPT  "[\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m%s\033[37m] $> "
 
@@ -9,7 +18,9 @@ int config_init(void)
 {
 
   /* On obtiens le chemin complet de la config */
-  char *chaine_home = getenv("HOME");
+	uid_t uid = getuid();
+	struct passwd *user = getpwuid(uid);
+  char *chaine_home = user->pw_dir;
   char *chaine_conf = "/.philshrc";
   strcat(chaine_home, chaine_conf);
 

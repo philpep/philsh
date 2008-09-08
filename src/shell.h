@@ -1,13 +1,14 @@
 #ifndef SHELL_HEADERS
 #define SHELL_HEADERS
 
-int make_argv(char *str, int i);
-int exec_cmd(void);
 char *get_prompt(void);
-void HandleInterrupt(int sig);
-int WaitForChild(pid_t pid);
+void options_philsh(int argc, char **argv);
+void afficher_aide(void);
+void init_env(void);
+int compter_mots(char *saisie, size_t *lenght);
+int parse_saisie(char *saisie, size_t buf_size, char **argv);
 
-
-#define SIZE 256
+/* Déclarations externes */
+int setenv(const char *name, const char *value, int overwrite);
 
 #endif

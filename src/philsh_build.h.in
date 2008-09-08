@@ -3,3 +3,6 @@
 #define PHILSH_COMPILE_BY         "@PHILSH_COMPILE_BY@"
 #define PHILSH_COMPILE_FLAGS      "@PHILSH_COMPILE_FLAGS@"
 #define PHILSH_LINKED_LIBS        "@PHILSH_LINKED_LIBS@"
+#define PHILSH_MAIL               "@PHILSH_MAIL@"
+#define PHILSH_BUILDIN            "@PHILSH_BUILDIN@"
+#define PHILSH_HTTP               "@PHILSH_HTTP@"

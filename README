@@ -21,7 +21,7 @@
 #   il suffit de faire comme d'habitude avec
 #   le signe & à la fin de votre saisie.
 # - Il comporte quelques commandes internes comme
-#   cd, pwd, which, env et ls
+#   cd, pwd, which, env.
 # - Il à pour unique but de m'apprendre à programmer
 #   en C et à me servir de svn, de vim, des Makefiles etc.
 # - Si vous lisez ce code, sachez que je n'ai jamais suivis
@@ -29,6 +29,9 @@
 #   jamais), donc si vous voyez une érreur, ou un defaut dans
 #   mes fonction, ou si vous avez un conseil surtout n'hésitez pas à vous 
 #   faire prof et à m'envoyer un mail.
+#   - NOUVEAU : pour ne pas executer une build-in commande, mettez
+#    '_' avant la commande. Par exemple pour executer /bin/which
+#    faites _which
 #   
 #   DEPENDANCE :
 #   - readline, ou libreadline
@@ -64,3 +67,5 @@
 #
 #
 # vim: ts=4 filetype=sh
+
+

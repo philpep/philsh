@@ -1,10 +1,12 @@
-/*nclude <stdio.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h> /* pour getuid() */
+#include <pwd.h>
 #include <assert.h>
 #include <sys/utsname.h>
-#include "int/internal.h"*/
-#include "headers.h"
+#include <sys/types.h> /* pour uid_t */
+#include "int/internal.h"
 
 char* get_prompt(void)
 {
@@ -17,12 +19,16 @@ char* get_prompt(void)
 	struct utsname localhost;
 	uname(&localhost);
 	/* Le login de l'utilisateur */
-	/* TODO : utiliser pwd.h pour ça */
-	char *user = getenv("USER");
+	uid_t uid = getuid();
+	struct passwd *user_info;
+	user_info = getpwuid(uid);
+	char *user;
+	user = user_info->pw_name;
 	/* Le dossier courant */
 	char *current_dir = get_current_dir();
 	/* Le HOME de l'utilisateur */
-	char *home = getenv("HOME");
+	char *home;
+	home = user_info->pw_dir;
 	/* Cette partie remplace HOME par ~ dans current_dir */
 	size_t i = 0;
 	for(i = 0; i < strlen(home); i++)

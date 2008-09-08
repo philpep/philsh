@@ -14,10 +14,10 @@ project(philsh C)
 set(philsh_src
   src/prompt.c
   src/shell.c
+  src/exec.c
   src/config.c
   src/int/cd.c
   src/int/env.c
-  src/int/ls.c
   src/int/pwd.c
   src/int/uname.c
   src/int/which.c)
@@ -25,7 +25,13 @@ set(philsh_src
 # Set the executable from the philsh_src
 add_executable(philsh ${philsh_src})
 # version
-set(VERSION 0.1)
+set(VERSION 0.2)
+# Mail
+set(MAIL "<philippe.pepiot@gmail.com>")
+# Http site
+set(HTTP "http://tux-atome.fr/philsh.git")
+# Buildin
+set(BUILDIN "which, cd, env et uname")
 # CFLAGS
 set(CFLAGS "-W -Wall -ansi")
 set(CMAKE_C_FLAGS ${CFLAGS})
@@ -40,6 +46,9 @@ set(PHILSH_COMPILE_MACHINE ${CMAKE_SYSTEM_PROCESSOR})
 set(PHILSH_COMPILE_BY $ENV{USER})
 set(PHILSH_COMPILE_FLAGS ${CFLAGS})
 set(PHILSH_LINKED_LIBS ${LIBRARIES_TO_LINK})
+set(PHILSH_MAIL ${MAIL})
+set(PHILSH_BUILDIN ${BUILDIN})
+set(PHILSH_HTTP ${HTTP})
 # Messages
 message("Using these CFLAGS : ${CFLAGS}")
 message("Linking with theses libraries : ${LIBRARIES_TO_LINK}")
