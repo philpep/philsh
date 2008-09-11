@@ -4,5 +4,5 @@
 #define PHILSH_COMPILE_FLAGS      "@PHILSH_COMPILE_FLAGS@"
 #define PHILSH_LINKED_LIBS        "@PHILSH_LINKED_LIBS@"
 #define PHILSH_MAIL               "@PHILSH_MAIL@"
-#define PHILSH_BUILDIN            "@PHILSH_BUILDIN@"
+#define PHILSH_BUILTIN            "@PHILSH_BUILTIN@"
 #define PHILSH_HTTP               "@PHILSH_HTTP@"

@@ -17,6 +17,8 @@ extern char **argv;
 extern char *chemin;
 struct lljobs *liste_jobs = NULL;
 
+extern const struct builtin builtin_command[];
+
 int exec_cmd_external(char **argv)
 {
 	pid_t pid;
@@ -112,6 +114,7 @@ int exec_cmd(int argc, char **argv)
 		 * si la commande est externe, elle est executé
 		 * par execvp. */
 		/* S'il faut lancer en backgroud */
+		const struct builtin *p_builtin;
 		if(bg)
 		{
 			int null = open("/dev/null", O_RDONLY);
@@ -129,36 +132,32 @@ int exec_cmd(int argc, char **argv)
 			sprintf(chemin_cmd_locale, "%s/%s", chemin, argv[0]+2);
 			execv(chemin_cmd_locale, argv);
 		}
-		else if (!strcmp(argv[0], "which"))
-			exit (internal_which(argc, argv));
-		else if (!strcmp(argv[0], "pwd"))
-			exit (internal_pwd(argc, argv));
-		else if (!strcmp(argv[0], "uname"))
-			exit(internal_uname(argc, argv));
-		else if (!strcmp(argv[0], "env"))
-			exit(internal_env(argc, argv));
-		else
+		p_builtin = builtin_command;
+		while(p_builtin->name != NULL)
 		{
-			if (argv[0][0] == '_')
-				argv[0]++;
-			else if (argv[0][0] == '/')
-			{
-				int file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
-				extern char **environ;
-				if ((errno == EACCES)||(file == -1))
-				{
-					fprintf(stderr, "Philsh: %s permission refusée\n", argv[0]);
-					exit(EACCES);
-				}
-				fexecve(file, argv, environ);
-			}
-			/* Si la commande est externe */
-			if (which_cmd (argv[0]) != 0)
-				fprintf(stderr, "Philsh : %s commande inconue\n", argv[0]);
-			else
-				execv(chemin, argv);
-			exit(127);
+			if(!strcmp(argv[0], p_builtin->name))
+				exit (p_builtin->p(argc, argv));
+			p_builtin++;
 		}
+		if (argv[0][0] == '_')
+			argv[0]++;
+		else if (argv[0][0] == '/')
+		{
+			int file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
+			extern char **environ;
+			if ((errno == EACCES)||(file == -1))
+			{
+				fprintf(stderr, "Philsh: %s permission refusée\n", argv[0]);
+				exit(EACCES);
+			}
+			fexecve(file, argv, environ);
+		}
+		/* Si la commande est externe */
+		if (which_cmd (argv[0]) != 0)
+			fprintf(stderr, "Philsh : %s commande inconnue\n", argv[0]);
+		else
+			execv(chemin, argv);
+		exit(127);
 	}
 	else if (pid != -1 && !bg)
 	{
@@ -173,7 +172,7 @@ int exec_cmd(int argc, char **argv)
 	{
 		/* On l'ajoute à la liste des jobs */
 		liste_jobs = add_job(liste_jobs, argv[0], pid);
-		printf("\033[36mJobs: %d : %s\033[37m\n", getpid(), argv[0]);
+		printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, argv[0]);
 	}
 	else
 	{
@@ -296,7 +295,7 @@ int afficher_liste_jobs(lljobs *liste)
 	tmp = liste;
 	while(tmp != NULL)
 	{
-		printf("[%d] : %s\n", tmp->pid, tmp->name);
+		printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", tmp->pid, tmp->name);
 		tmp = tmp->next;
 	}
 	return 0;

@@ -21,12 +21,23 @@ char *prompt;
 /* le chemin de l'executable par exemple /bin/echo */
 char *chemin;
 
+const struct builtin builtin_command[] =
+{
+	{"pwd", internal_pwd},
+	{"which", internal_which},
+	{"uname", internal_uname},
+	{"env", internal_env},
+	{NULL, NULL}
+};
+
 void init_env(void)
 {
 	uid_t uid = getuid();
 	struct passwd *user;
 	user = getpwuid(uid);
 	setenv("HOME", user->pw_dir, 0);
+	if (getenv("PATH") == NULL)
+		putenv("PATH=/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin");
 	return;
 }
 
@@ -101,7 +112,7 @@ int compter_mots(char *saisie, size_t *lenght)
 		words++;
 	for(;*p != '\0';p++)
 	{
-		if(*p == '"')
+		if((*p == '"')&&((p != saisie)&&(*(p-1) != '\\')))
 		{
 			gui = (gui) ? 0 : 1;
 			continue;
@@ -144,6 +155,11 @@ int main (int argc, char **argv)
 		/* La fonction readline est magique */
 		saisie = readline(prompt);
 		free(prompt);
+		if(saisie)
+		{
+		   if(*saisie)
+		      add_history(saisie);
+		}
 		cmd_argc = compter_mots(saisie, &buf_size);
 		/* Si la saisie est non nulle */
 		if (cmd_argc != 0)
@@ -220,7 +236,7 @@ Le remplacement des variables d'environnements ($) par leurs valeurs et la gesti
 ne marchent pas mais c'est un des objectifs prioritaires de philsh.\n\
 Par contre depuis la version 0.2, la mise en backgroud des procéssus avec & fonctionne\n\
 et la gestion des signaux fonctionne partiellement\n\
-Philsh comporte des build-in commandes : %s ; ls n'y est pas encore (il était présent\n\
+Philsh comporte des built-in commandes : %s ; ls n'y est pas encore (il était présent\n\
 dans la version 0.1 mais le code n'était pas de moi donc ça compte pas :-)\n\
 Il n'y a pas non plus de boucles possible (if, then, else, fi, for, do, done, while)\n\
 Philsh à pour but la complexité, donc tout (le maximum possible) est alloué dynamiquement\n\
@@ -254,7 +270,7 @@ Vous pouvez contacter les auteurs par mail :\n\
 Philippe Pepiot alias philpep %s\n\
 rhaamo <markocpc@gmail.com>\n\
 <%s>\n\
-\n\n\n", PHILSH_VERSION, PHILSH_BUILDIN, PHILSH_MAIL, PHILSH_HTTP);
+\n\n\n", PHILSH_VERSION, PHILSH_BUILTIN, PHILSH_MAIL, PHILSH_HTTP);
 			return;
 }
 

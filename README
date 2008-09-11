@@ -29,7 +29,7 @@
 #   jamais), donc si vous voyez une érreur, ou un defaut dans
 #   mes fonction, ou si vous avez un conseil surtout n'hésitez pas à vous 
 #   faire prof et à m'envoyer un mail.
-#   - NOUVEAU : pour ne pas executer une build-in commande, mettez
+#   - NOUVEAU : pour ne pas executer une built-in commande, mettez
 #    '_' avant la commande. Par exemple pour executer /bin/which
 #    faites _which
 #   
@@ -56,6 +56,7 @@
 # - faites un cd lien_symbolique puis un cd ..
 # - Executez philsh sur un petit terminal
 # - Faites un ctrl-z sur un processus fils...
+# - ctrl-D ---> segfault
 #
 #
 #===========#

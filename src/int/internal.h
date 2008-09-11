@@ -12,4 +12,16 @@ int internal_setenv(char *str);
 int internal_env(int argc, char **argv);
 /* Déclarations externes */
 int setenv (const char *name, const char *value, int overwrite);
+
+/* Structure des built-in commandes */
+typedef struct builtin builtin;
+struct builtin
+{
+	char *name;
+	int (*p)(int, char **);
+};
+
+extern const struct builtin builtin_command[];
+
+
 #endif

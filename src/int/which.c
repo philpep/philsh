@@ -116,20 +116,25 @@ int which(char **argv, int a, int ret)
 	strcpy(path, getenv("PATH"));
 	DIR *dossier;
 	struct dirent *contenu_dossier;
+	const struct builtin *p_builtin;
+	p_builtin = builtin_command;
+	while (p_builtin->name != NULL)
+	{
+	   if (!strcmp(p_builtin->name, command))
+	   {
+	      printf("%s : built-in command\n", command);
+	      if (!a)
+	      {
+		 free(path);
+		 return which(argv+1, a, 0);
+	      }
+	      bingo = 1;
+	      break;
+	   }
+	   p_builtin++;
+	}
+
 	nom_dossier = strtok(path, ":");
-        /* Si la commande est interne a philsh */
-        if ( !strcmp(command, "cd") || !strcmp(command, "which") \
-            || !strcmp(command, "uname") || !strcmp(command, "pwd") \
-	    || !strcmp(command, "env") )
-        {
-          printf("%s : build-in command\n", command);
-	  if (!a)
-	  {
-		  free(path);
-		  return which(argv+1, a, 0);
-	  }
-	  bingo = 1;
-        }
 	/* La boucle qui cherche l'executable dans le PATH */
 	while (nom_dossier != NULL)
 	{
