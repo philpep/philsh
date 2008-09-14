@@ -21,6 +21,10 @@ char *prompt;
 /* le chemin de l'executable par exemple /bin/echo */
 char *chemin;
 
+/* Structure des builtin commandes,
+ * char *name;
+ * int (*p)(int, char**);
+ */
 const struct builtin builtin_command[] =
 {
 	{"pwd", internal_pwd},
@@ -30,6 +34,7 @@ const struct builtin builtin_command[] =
 	{NULL, NULL}
 };
 
+/* Initialise l'environnement */
 void init_env(void)
 {
 	uid_t uid = getuid();
@@ -112,7 +117,7 @@ int compter_mots(char *saisie, size_t *lenght)
 		words++;
 	for(;*p != '\0';p++)
 	{
-		if((*p == '"')&&((p != saisie)&&(*(p-1) != '\\')))
+		if(*p == '"')
 		{
 			gui = (gui) ? 0 : 1;
 			continue;

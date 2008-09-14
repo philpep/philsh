@@ -15,6 +15,8 @@ int internal_cd(int argc, char **argv)
 {
 	uid_t uid = getuid();
 	struct passwd *user = getpwuid(uid);
+	char *name;
+	char *p;
 	char *chemin;
 	char *oldpwd;
 	int err;
@@ -27,9 +29,47 @@ int internal_cd(int argc, char **argv)
 	}
 	else if ((argc == 2)&&(argv[1][0] == '~'))
 	{
-		chemin = malloc(sizeof(char) * (1+strlen(argv[1])+strlen(user->pw_dir)));
-		assert(chemin != NULL);
-		sprintf(chemin, "%s%s", user->pw_name, argv[1]+1);
+	   if((argv[1][1] == '\0')||(argv[1][1] == '/'))
+	   {
+	      chemin = malloc(sizeof(char) * (strlen(user->pw_dir)+strlen(argv[1])));
+	      assert(chemin != NULL);
+	      sprintf(chemin, "%s%s", user->pw_dir, argv[1]+1);
+	   }
+	   else
+	   {
+	      p = strchr(argv[1], '/');
+	      if (p == NULL)
+	      {
+		 name = malloc(sizeof(char) * (1+strlen(argv[1]+1)));
+		 assert(name != NULL);
+		 strcpy(name, argv[1]+1);
+	      }
+	      else
+	      {
+		 name = malloc(sizeof(char) * (p-argv[1]));
+		 memcpy(name, argv[1]+1, p-argv[1]-1);
+		 name[p-argv[1]-1] = '\0';
+	      }
+	      if(NULL == (user = getpwnam(name)))
+	      {
+		 fprintf(stderr, "Philsh: aucun utilisateur de ce nom : %s\n", name);
+		 free(name);
+		 return -1;
+	      }
+	      free(name);
+	      if (p == NULL)
+	      {
+		 chemin = malloc(sizeof(char) * (1+strlen(user->pw_dir)));
+		 assert(chemin != NULL);
+		 strcpy(chemin, user->pw_dir);
+	      }
+	      else
+	      {
+		 chemin = malloc(sizeof(char) * (1+strlen(user->pw_dir)+strlen(p)));
+		 assert(chemin != NULL);
+		 sprintf(chemin, "%s%s", user->pw_dir, p);
+	      }
+	   }
 	}
 	else
 	{
