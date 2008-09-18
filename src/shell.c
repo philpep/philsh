@@ -16,8 +16,6 @@
 char **cmd_argv;
 /* le nombre d'arguments dans la saisie */
 int cmd_argc;
-/* Le prompt */
-char *prompt;
 /* le chemin de l'executable par exemple /bin/echo */
 char *chemin;
 
@@ -143,7 +141,7 @@ int compter_mots(char *saisie, size_t *lenght)
 
 int main (int argc, char **argv)
 {
-	options_philsh(argc, argv);
+   options_philsh(argc, argv);
         /* Avant tout on va initialiser la config.. */
 	/* TODO : debugger cette fonction -> config.c
 	 * config_init();
@@ -152,11 +150,12 @@ int main (int argc, char **argv)
 	int i;
 	size_t buf_size;
 	char *saisie;
+	char *prompt;
 	/* La super boucle du phil shell */
 	for (;;)
 	{
 		cmd_argc = 0;
-		prompt = get_prompt();
+		prompt = set_prompt();
 		/* La fonction readline est magique */
 		saisie = readline(prompt);
 		free(prompt);
@@ -184,13 +183,14 @@ int main (int argc, char **argv)
 	return 0;
 }
 
-void options_philsh(int argc, char **argv)
+int options_philsh(int argc, char **argv)
 {
-	const char *optstring = "hv";
+	const char *optstring = "hvc";
 	static struct option philsh_option[] =
 	{
 		{"help", 0, NULL, 'h'},
 		{"version", 0, NULL, 'v'},
+		{"execute", 0, NULL, 'c'},
 		{0, 0, 0, 0}
 	};
 	char opt;
@@ -208,8 +208,13 @@ void options_philsh(int argc, char **argv)
 			afficher_aide();
 			exit(0);
 		}
+		else if(opt == 'c')
+		{
+		   exec_cmd(argc-2, argv+2);
+		   exit(0);
+		}
 	}
-	return;
+	return 0;
 }
 
 void afficher_aide(void)
@@ -217,6 +222,7 @@ void afficher_aide(void)
 
 			printf("PHILSH version %s\n\
 philsh [OPTION]...\n\
+       -c, --execute commande (arguments)   Executer la commande puis quitter\n\
        -h, --help                           afficher l'aide\n\
        -v, --version                        afficher le nom et la version du logiciel\n\
 \n\

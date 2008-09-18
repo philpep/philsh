@@ -21,6 +21,7 @@
 #include "int/internal.h"
 #include "philsh_build.h"
 #include "exec.h"
+#include "prompt.h"
 
 void config_init(void);
 

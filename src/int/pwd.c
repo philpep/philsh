@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <errno.h>
 #include <string.h>
 #include "internal.h"
 
@@ -11,24 +12,9 @@
 /* TODO : gestion des liens symboliques */
 char * get_current_dir(void)
 {
-	int taille = 128;
-	char * buffer = NULL;
-	for(;;)
-	{
-		buffer = malloc (sizeof(char) * taille);
-		assert(buffer != NULL);
-		if (getcwd(buffer, taille) == NULL)
-		{
-			free(buffer);
-			taille<<=1;
-		}
-		else
-		{
-			if (setenv("PWD", buffer, 1) != 0)
-				fprintf(stderr, "Philsh : Impossible de fixer la valeur de PWD à %s\n", buffer);
-			return buffer;
-		}
-	}
+   char *p = get_current_dir_name();
+   setenv("PWD", p, 1);
+   return p;
 }
 
 /* TODO : gestion des liens symboliques,

@@ -33,7 +33,7 @@ set(HTTP "http://tux-atome.fr/philsh.git")
 # Buildin
 set(BUILTIN "which, cd, env et uname")
 # CFLAGS
-set(CFLAGS "-W -Wall -ansi")
+set(CFLAGS "-W -Wall -ansi -g -fomit-frame-pointer -march=i686")
 set(CMAKE_C_FLAGS ${CFLAGS})
 # Link Libraries
 set(LIBRARIES_TO_LINK 

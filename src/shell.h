@@ -1,8 +1,7 @@
 #ifndef SHELL_HEADERS
 #define SHELL_HEADERS
 
-char *get_prompt(void);
-void options_philsh(int argc, char **argv);
+int options_philsh(int argc, char **argv);
 void afficher_aide(void);
 void init_env(void);
 int compter_mots(char *saisie, size_t *lenght);
