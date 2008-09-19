@@ -10,6 +10,7 @@ int which_cmd(char *str);
 int internal_uname(int argc, char **argv);
 int internal_setenv(char *str);
 int internal_env(int argc, char **argv);
+int whoami(int argc, char **argv);
 /* Déclarations externes */
 int setenv (const char *name, const char *value, int overwrite);
 char *get_current_dir_name(void);

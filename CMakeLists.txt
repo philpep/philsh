@@ -15,8 +15,8 @@ set(philsh_src
   src/prompt.c
   src/shell.c
   src/exec.c
-  src/config.c
   src/int/cd.c
+  src/int/whoami.c
   src/int/env.c
   src/int/pwd.c
   src/int/uname.c
@@ -31,14 +31,14 @@ set(MAIL "<philippe.pepiot@gmail.com>")
 # Http site
 set(HTTP "http://tux-atome.fr/philsh.git")
 # Buildin
-set(BUILTIN "which, cd, env et uname")
+set(BUILTIN "which, cd, whoami, env et uname")
 # CFLAGS
-set(CFLAGS "-W -Wall -ansi -g -fomit-frame-pointer -march=i686")
+set(CFLAGS "-W -Wall -ansi -ggdb -fomit-frame-pointer -march=i686")
 set(CMAKE_C_FLAGS ${CFLAGS})
 # Link Libraries
 set(LIBRARIES_TO_LINK 
-  readline
-  confuse)
+  readline)
+#  confuse)
 target_link_libraries(philsh ${LIBRARIES_TO_LINK})
 # replace strings in configs
 set(PHILSH_VERSION ${VERSION})

@@ -96,11 +96,6 @@ int exec_cmd(int argc, char **argv)
 		afficher_aide();
 		return 0;
 	}
-	else if(!strcmp(argv[0], "jobs"))
-	{
-		afficher_liste_jobs(liste_jobs);
-		return 0;
-	}
 	/* Meme remaque */
 	else if (strchr(argv[0], '='))
 		return internal_setenv(argv[0]);
@@ -123,8 +118,13 @@ int exec_cmd(int argc, char **argv)
 			dup2(null, 0);
 			signal(SIGINT, SIG_IGN);
 		}
+		if(!strcmp(argv[0], "jobs"))
+		{
+			afficher_liste_jobs(liste_jobs);
+			exit(0);
+		}
 		/* Si on à affaire à un ./ ou un exec */
-		if ( (argv[0][0] == '.')&&(argv[0][1] == '/') )
+		else if ( (argv[0][0] == '.')&&(argv[0][1] == '/') )
 		{
 			chemin = get_current_dir();
 			chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(argv[0])));
@@ -220,7 +220,7 @@ int WaitForChild(pid_t pid)
 			{
 				liste_jobs = del_job(liste_jobs, cpid);
 #ifdef VERBOSE
-				printf("\033[31mFin du processus de pid : %d, code de retour : %d\n\033[37m", pid, WEXITSTATUS(st));
+				printf("[\033[36m%d\033[37m]: Terminé, code de retour : %d\n", pid, WEXITSTATUS(st));
 #endif
 			}
 		}

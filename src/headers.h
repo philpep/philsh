@@ -23,7 +23,6 @@
 #include "exec.h"
 #include "prompt.h"
 
-void config_init(void);
-
+/* void config_init(void); */
 
 #endif

@@ -25,11 +25,13 @@ char *chemin;
  */
 const struct builtin builtin_command[] =
 {
-	{"pwd", internal_pwd},
-	{"which", internal_which},
-	{"uname", internal_uname},
-	{"env", internal_env},
-	{NULL, NULL}
+   {"pwd", internal_pwd},
+   {"which", internal_which},
+   {"uname", internal_uname},
+   {"env", internal_env},
+   {"cd", internal_cd},
+   {"whoami", whoami},
+   {NULL, NULL}
 };
 
 /* Initialise l'environnement */
@@ -104,11 +106,18 @@ int parse_saisie(char *saisie, size_t buf_size, char **argv)
  */
 int compter_mots(char *saisie, size_t *lenght)
 {
-	char *p = saisie;
+	char *p = strchr(saisie, '\0');
 	int words = 0;
 	size_t lenght_current = 0;
 	size_t lenght_max = 0;
 	int gui = 0;
+	p--;
+	while(*p == ' ')
+	{
+	   *p = '\0';
+	   p--;
+	}
+	p = saisie;
 	while(*p == ' ')
 		p++;
 	if(*p != '\0')
@@ -163,6 +172,21 @@ int main (int argc, char **argv)
 		{
 		   if(*saisie)
 		      add_history(saisie);
+		}
+		/* C'est honteux, mais en attendant le support des
+		 * caractères speciaux, on utilise system()
+		 * Histoire que le shell donne l'impression
+		 * de bien marcher
+		 * NOTE : L'idée honteuse n'est pas de moi,
+		 * en lisant le code de sash (app-shell/sash sur gentoo)
+		 * je me suis rendu compte qu'il utilisait system() a tout-vat,
+		 * du coup je me dis pourquoi pas ? C'est bien sûr temporaire !
+		 */
+		if(strchr(saisie, '|')||strchr(saisie, '*')||strchr(saisie, '>')||strchr(saisie, '<')||strstr(saisie, "&&"))
+		{
+		   system(saisie);
+		   free(saisie);
+		   continue;
 		}
 		cmd_argc = compter_mots(saisie, &buf_size);
 		/* Si la saisie est non nulle */
