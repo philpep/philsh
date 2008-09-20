@@ -10,7 +10,8 @@ set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
 option(GENERATE_MANPAGES "generate manpages" ON)
 # Project name - philsh
-project(philsh C)
+set(PROJECT_NAME philsh)
+project(${PROJECT_NAME} C)
 # Definition of the philsh source
 set(philsh_src
   src/prompt.c
@@ -73,6 +74,15 @@ set(PHILSH_HTTP ${HTTP})
 # Messages
 message("Using these CFLAGS : ${CFLAGS}")
 message("Linking with theses libraries : ${LIBRARIES_TO_LINK}")
+
+# sets
+# {{{ Install path and configuration variables
+if(DEFINED PREFIX)
+    set(PREFIX ${PREFIX} CACHE PATH "install prefix")
+    set(CMAKE_INSTALL_PREFIX ${PREFIX})
+else()
+    set(PREFIX ${CMAKE_INSTALL_PREFIX} CACHE PATH "install prefix")
+endif()
 
 # {{{ Check if documentation can be build
 if(GENERATE_MANPAGES)
@@ -157,3 +167,16 @@ endmacro()
 foreach(file ${philsh_configure_files})
     a_configure_file(${file})
 endforeach()
+
+# installs - sets
+set(PROJECT_DATA_PATH share/${PROJECT_NAME})
+set(PROJECT_TODO ${SOURCE_DIR}/TODO)
+set(PROJECT_README ${SOURCE_DIR}/README)
+
+# installs
+install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)
+if(GENERATE_MANPAGES)
+  install(FILES ${PHILSH_MAN1_FILES} DESTINATION ${PHILSH_MAN_PATH}/man1)
+endif()
+install(FILES ${PROJECT_TODO} ${PROJECT_README} DESTINATION
+  ${PROJECT_DATA_PATH})

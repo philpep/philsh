@@ -9,5 +9,6 @@ philsh
 \#*
 src/philsh_build.h
 philsh.1.gz
+philsh.1
 philsh.1.xml
 build/
