@@ -43,6 +43,7 @@
 #   - make build
 #   - cmake ..
 #   - make
+#   - sudo make install si vous souhaitez l'installer
 #   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
 #   - lancez le via ./philsh (dans un vrai shell :)
 #   - N'oubliez pas de copier philshrc dans ~/.philshrc (plus utiliser pour le moment)
