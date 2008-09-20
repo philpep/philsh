@@ -1,2 +1,13 @@
   · voir pour une structure pour le truc du prompt
   · pareil pour la config
+
+rhaamo :
+  · CMAKE
+    · Ajouter make install
+    · Ajouter generation manpage
+    · Generation changelog ?
+  · GENTOO/EBUILD
+    · Commencer d'ecrire un ebuild 'live' ?
+  · Code
+    · Remanier l'aide.
+    · Remanier le -v|--version
