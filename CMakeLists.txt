@@ -8,6 +8,7 @@ endif()
 # Source dir
 set(SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR})
+option(GENERATE_MANPAGES "generate manpages" ON)
 # Project name - philsh
 project(philsh C)
 # Definition of the philsh source
@@ -21,6 +22,26 @@ set(philsh_src
   src/int/pwd.c
   src/int/uname.c
   src/int/which.c)
+
+# Find exterbal programs
+macro(a_find_program var prg req)
+    set(required ${req})
+    find_program(${var} ${prg})
+    if(NOT ${var})
+        message(STATUS "${prg} not found.")
+        if(required)
+            message(FATAL_ERROR "${prg} is required to build wmfs")
+        endif()
+    else()
+        message(STATUS "${prg} -> ${${var}}")
+    endif()
+endmacro()
+find_program(GIT_EXECUTABLE git)
+# programs needed for man pages
+a_find_program(ASCIIDOC_EXECUTABLE asciidoc FALSE)
+a_find_program(XMLTO_EXECUTABLE xmlto FALSE)
+a_find_program(GZIP_EXECUTABLE gzip FALSE)
+a_find_program(CAT_EXECUTABLE cat TRUE)
 
 # Set the executable from the philsh_src
 add_executable(philsh ${philsh_src})
@@ -52,6 +73,74 @@ set(PHILSH_HTTP ${HTTP})
 # Messages
 message("Using these CFLAGS : ${CFLAGS}")
 message("Linking with theses libraries : ${LIBRARIES_TO_LINK}")
+
+# {{{ Check if documentation can be build
+if(GENERATE_MANPAGES)
+    if(NOT ASCIIDOC_EXECUTABLE OR NOT XMLTO_EXECUTABLE OR NOT GZIP_EXECUTABLE)
+        if(NOT ASCIIDOC_EXECUTABLE)
+            SET(missing "asciidoc")
+        endif()
+        if(NOT XMLTO_EXECUTABLE)
+            SET(missing ${missing} " xmlto")
+        endif()
+        if(NOT GZIP_EXECUTABLE)
+            SET(missing ${missing} " gzip")
+        endif()
+
+        message(STATUS "Not generating manpages. Missing: " ${missing})
+        set(GENERATE_MANPAGES OFF)
+    endif()
+endif()
+
+# set man path
+set(PHILSH_MAN_SRCS
+  ${SOURCE_DIR}/philsh.1.txt)
+
+if(DEFINED PHILSH_MAN_PATH)
+   set(PHILSH_MAN_PATH ${PHILSH_MAN_PATH} CACHE PATH "philsh manpage directory")
+else()
+   set(PHILSH_MAN_PATH ${PREFIX}/share/man CACHE PATH "philsh manpage directory")
+endif()
+
+# {{{ Manpages
+if(GENERATE_MANPAGES)
+    foreach(txtfile ${PHILSH_MAN_SRCS})
+        string(REGEX REPLACE ".txt\$" ".xml" xmlfile ${txtfile})
+        string(REPLACE ${SOURCE_DIR}
+                       ${BUILD_DIR} xmlfile ${xmlfile})
+        string(REGEX REPLACE ".xml\$" ".gz" gzfile ${xmlfile})
+        string(REGEX REPLACE ".gz\$" "" manfile ${gzfile})
+
+        add_custom_command(
+            COMMAND ${CAT_EXECUTABLE} ${txtfile}
+                    | ${ASCIIDOC_EXECUTABLE} -d manpage -b docbook -o ${xmlfile} -
+            WORKING_DIRECTORY ${BUILD_DIR}
+            OUTPUT  ${xmlfile}
+            DEPENDS ${txtfile}
+            VERBATIM)
+        add_custom_command(
+            COMMAND ${XMLTO_EXECUTABLE} man ${xmlfile}
+            OUTPUT  ${manfile}
+            DEPENDS ${xmlfile})
+        add_custom_command(
+            COMMAND ${CAT_EXECUTABLE} ${manfile}
+                    | ${GZIP_EXECUTABLE}
+                    > ${gzfile}
+            OUTPUT  ${gzfile}
+            DEPENDS ${manfile}
+            VERBATIM)
+
+        set(MAN_FILES ${MAN_FILES} ${gzfile})
+
+        # figure out in what section to install to from filename
+        string(REGEX REPLACE "^.*\\.([0-9])\\.gz\$" "\\1" section ${gzfile})
+        set(PHILSH_MAN${section}_FILES ${WMFS_MAN${section}_FILES} ${gzfile})
+    endforeach()
+
+    add_custom_target(man ALL DEPENDS ${MAN_FILES})
+endif()
+# }}}
+
 # Configure files
 set(philsh_configure_files
   src/philsh_build.h.in)

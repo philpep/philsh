@@ -1,0 +1,47 @@
+philsh(1)
+=========
+
+NAME
+----
+
+philsh - Simple and lightweight shell
+
+SYNOPSIS
+--------
+
+*philsh* [*-c* | *--execute* 'command'] [*-h* | *--help*] [*-v* | *--version*]
+
+DESCRIPTION
+-----------
+
+Description here.
+
+OPTIONS
+-------
+
+*-c*, *--execute* 'command'::
+ Execute a command, then exit.
+*-h*, *--help*::
+  Print help information to standard output, then exit.
+*-v*, *--version*::
+  Print philsh version to standard output, then exit.
+
+BUGS
+----
+
+Bugs here
+
+AUTHORS
+-------
+
+Marc Lagrange <markocpc@gmail.com>, Toi . ;)
+
+WWW
+---
+
+Git repository at http://tux-atome.fr/philsh.git
+
+COPYING
+-------
+
+License ?
