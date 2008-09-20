@@ -45,7 +45,7 @@
 #   - make
 #   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
 #   - lancez le via ./philsh (dans un vrai shell :)
-#   - N'oubliez pas de copier philshrc dans ~/.philshrc
+#   - N'oubliez pas de copier philshrc dans ~/.philshrc (plus utiliser pour le moment)
 #
 #
 #===========================#
