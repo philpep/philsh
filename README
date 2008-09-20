@@ -39,7 +39,11 @@
 #   - libconfuse
 #
 #   UTILISATION :
-#   - cd philsh puis cmake . et make :)
+#   - cd philsh
+#   - make build
+#   - cmake ..
+#   - make
+#   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
 #   - lancez le via ./philsh (dans un vrai shell :)
 #   - N'oubliez pas de copier philshrc dans ~/.philshrc
 #
