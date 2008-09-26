@@ -262,9 +262,12 @@ int options_philsh(int argc, char **argv)
    {
       if (opt == 'v')
       {
-	 printf("Philsh %s, Compilé par %s sur une machine %s avec les flags %s\
-	       et avec les librairies %s\nPour tout commentaire, pour des bugs, pour me remercier (si si, je suis\
-		  serieux ^^) ----> %s\n", PHILSH_VERSION, PHILSH_COMPILE_BY, PHILSH_COMPILE_MACHINE, PHILSH_COMPILE_FLAGS, PHILSH_LINKED_LIBS, PHILSH_MAIL);
+	 printf("Philsh version : "PHILSH_VERSION".\n"
+	       " Compilation settings :\n"
+	       "  - Flags : "PHILSH_COMPILE_FLAGS"\n"
+	       "  - Linked Libs : "PHILSH_LINKED_LIBS"\n"
+	       "  - On "PHILSH_COMPILE_MACHINE" by "PHILSH_COMPILE_BY"\n"
+	       " Main contact : "PHILSH_MAIL"\n");
 	 exit(0);
       }
       else if(opt == 'h')
