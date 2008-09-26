@@ -14,7 +14,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-Description here.
+Philsh is a simple shell.
 
 OPTIONS
 -------
@@ -29,12 +29,15 @@ OPTIONS
 BUGS
 ----
 
-Bugs here
+Philsh isn't sable for now, so use it at your own risk. :)
 
 AUTHORS
 -------
 
-Marc Lagrange <markocpc@gmail.com>, Toi . ;)
+Marc Lagrange <markocpc@gmail.com> for compilation system with cmake, git
+repository.
+
+Philippe Pepiot <philippe.pepiot@gmail.com> for the code.
 
 WWW
 ---
@@ -44,4 +47,4 @@ Git repository at http://tux-atome.fr/philsh.git
 COPYING
 -------
 
-License ?
+See LICENCE file
