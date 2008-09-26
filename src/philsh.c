@@ -204,7 +204,7 @@ int exec_saisie(char *saisie)
       i = system(buffer);
       if (buffer != saisie)
 	 free(buffer);
-      return i
+      return i;
    }
    argv = malloc (sizeof(char *) * (argc+1));
    argc = parse_saisie(buffer, buf_size, argv);
