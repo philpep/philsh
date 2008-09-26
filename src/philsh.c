@@ -200,7 +200,12 @@ int exec_saisie(char *saisie)
     * du coup je me dis pourquoi pas ? C'est bien sûr temporaire !
     */
    if(strchr(buffer, '|')||strchr(buffer, '*')||strchr(buffer, '>')||strchr(buffer, '<')||strstr(buffer, "&&")||strchr(buffer, '`')||strchr(buffer, '$')||strchr(buffer, '\\'))
-      return system(buffer);
+   {
+      i = system(buffer);
+      if (buffer != saisie)
+	 free(buffer);
+      return i
+   }
    argv = malloc (sizeof(char *) * (argc+1));
    argc = parse_saisie(buffer, buf_size, argv);
    if (buffer != saisie)
