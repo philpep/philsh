@@ -22,16 +22,16 @@ char * get_current_dir(void)
  * le chemin absolu */
 int internal_pwd(int argc, char **argv)
 {
-	if (argc > 1)
-	{
-		fprintf(stderr, "Philsh : Option inconue : %s\n", argv[1]);
-		return -1;
-	}
-	char *current_dir;
-	current_dir = get_current_dir();
-	assert(current_dir != NULL);
-	printf("%s\n", current_dir);
-	free(current_dir);
-	return 0;
+   if (argc > 1)
+   {
+      fprintf(stderr, "Philsh : Option inconue : %s\n", argv[1]);
+      return -1;
+   }
+   char *current_dir;
+   current_dir = get_current_dir();
+   assert(current_dir != NULL);
+   printf("%s\n", current_dir);
+   free(current_dir);
+   return 0;
 }
 

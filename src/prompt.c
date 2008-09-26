@@ -1,3 +1,10 @@
+/*
+ * prompt.c
+ * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
+ * See LICENCE file for licence of this piece of software
+ *
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

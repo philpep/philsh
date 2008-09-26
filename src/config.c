@@ -17,32 +17,32 @@
 int config_init(void)
 {
 
-  /* On obtiens le chemin complet de la config */
-	uid_t uid = getuid();
-	struct passwd *user = getpwuid(uid);
-  char *chaine_home = user->pw_dir;
-  char *chaine_conf = "/.philshrc";
-  strcat(chaine_home, chaine_conf);
+   /* On obtiens le chemin complet de la config */
+   uid_t uid = getuid();
+   struct passwd *user = getpwuid(uid);
+   char *chaine_home = user->pw_dir;
+   char *chaine_conf = "/.philshrc";
+   strcat(chaine_home, chaine_conf);
 
-  cfg_opt_t opts[] =
-  {
-    CFG_STR("prompt", DEFAULT_PROMPT, CFGF_NONE),
-    CFG_END()
-  };
-  cfg_t *cfg;
-  cfg = cfg_init(opts, CFGF_NONE);
+   cfg_opt_t opts[] =
+   {
+      CFG_STR("prompt", DEFAULT_PROMPT, CFGF_NONE),
+      CFG_END()
+   };
+   cfg_t *cfg;
+   cfg = cfg_init(opts, CFGF_NONE);
 
-  int ret;
-  ret = cfg_parse(cfg, chaine_home);
-  if(ret == CFG_FILE_ERROR){
-    printf("Impossible de charger la configuration : %s\n", chaine_home);
-    exit(EXIT_FAILURE);
-  } else if(ret == CFG_PARSE_ERROR)
-    cfg_error(cfg, "Impossible de parser la configuration : %s\n", chaine_home);
+   int ret;
+   ret = cfg_parse(cfg, chaine_home);
+   if(ret == CFG_FILE_ERROR){
+      printf("Impossible de charger la configuration : %s\n", chaine_home);
+      exit(EXIT_FAILURE);
+   } else if(ret == CFG_PARSE_ERROR)
+      cfg_error(cfg, "Impossible de parser la configuration : %s\n", chaine_home);
 
-  /* char *prompt = cfg_getstr(cfg, "prompt"); */
-  /* prompt = cfg_getstr(cfg, "prompt"); */
+   /* char *prompt = cfg_getstr(cfg, "prompt"); */
+   /* prompt = cfg_getstr(cfg, "prompt"); */
 
-  cfg_free(cfg);
-  return 0;
+   cfg_free(cfg);
+   return 0;
 }

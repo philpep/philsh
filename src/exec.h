@@ -6,14 +6,13 @@ int exec_cmd(int argc, char **argv);
 void HandleInterrupt(int sig);
 int WaitForChild (pid_t pid);
 
-#define VERBOSE
 /* Liste chainée qui contient tous les jobs en background */
 typedef struct lljobs lljobs;
 struct lljobs
 {
-	char *name;
-	pid_t pid;
-	struct lljobs *next;
+   char *name;
+   pid_t pid;
+   struct lljobs *next;
 };
 lljobs *add_job(lljobs *liste, char *name, pid_t pid);
 int afficher_liste_jobs(lljobs *liste);

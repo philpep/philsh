@@ -1,7 +1,6 @@
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-cmake_uninstall.cmake
 Makefile
 *.o
 .*.sw?
@@ -9,7 +8,3 @@ philsh
 #*
 \#*
 src/philsh_build.h
-philsh.1.gz
-philsh.1
-philsh.1.xml
-build/

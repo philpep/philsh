@@ -16,23 +16,23 @@ int whoami(int argc, char **argv)
       {0, 0, 0, 0}
    };
    char c;
-      while(EOF != (c = getopt_long(argc, argv, optstrings, whoami_options, NULL)))
+   while(EOF != (c = getopt_long(argc, argv, optstrings, whoami_options, NULL)))
+   {
+      if ((c == '?')||(c == 'h'))
       {
-	 if ((c == '?')||(c == 'h'))
-	 {
-	    printf("whoami (-h|-v)\n\n\n\
-Affiche simplement le login de l'utilisateur...\n\
-      --help, -h     : Affiche cette aide\n\
-      --version, -v  : Affiche la version du logiciel\n\
-Rapporter des bugs à %s\n", PHILSH_MAIL);
-	    return 0;
-	 }
-	 if (c == 'v')
-	 {
-	    printf("whoami, version %s pour Philsh\nRapporter des bugs à %s\n", PHILSH_VERSION, PHILSH_MAIL);
-	    return 0;
-	 }
+	 printf("whoami (-h|-v)\n\n\n\
+	       Affiche simplement le login de l'utilisateur...\n\
+	       --help, -h     : Affiche cette aide\n\
+	       --version, -v  : Affiche la version du logiciel\n\
+	       Rapporter des bugs à %s\n", PHILSH_MAIL);
+	 return 0;
       }
+      if (c == 'v')
+      {
+	 printf("whoami, version %s pour Philsh\nRapporter des bugs à %s\n", PHILSH_VERSION, PHILSH_MAIL);
+	 return 0;
+      }
+   }
    uid_t uid;
    struct passwd *user;
    uid = getuid();
