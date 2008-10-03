@@ -4,7 +4,7 @@
 int exec_cmd_external(char **argv);
 int exec_cmd(int argc, char **argv);
 void HandleInterrupt(int sig);
-int WaitForChild (pid_t pid);
+int WaitForChild (pid_t pid, int *ret);
 
 /* Liste chainée qui contient tous les jobs en background */
 typedef struct lljobs lljobs;

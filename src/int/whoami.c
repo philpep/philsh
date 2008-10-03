@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
+ * philsh is under BSD licence, see LICENCE file for more informations.
+ *
+ */ 
 /* Affiche simplement le nom de l'utilisateur... */
 #include <stdio.h>
 #include <unistd.h>

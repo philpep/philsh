@@ -6,5 +6,6 @@
 
 int init_config(char *config_file);
 int parse_file(char *ptr);
+int source(int argc, char **argv);
 
 #endif

@@ -1,5 +1,0 @@
-# Voici la configuration principale de PhilSH
-# Le prompt, attention aux espaces, un de trop et segfault. :( bug en cours de resolution.. :)
-prompt = "[\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m%s\033[37m] $> "
-
-alias ls="ls --color=auto"

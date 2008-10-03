@@ -1,10 +1,8 @@
 /*
- * prompt.c
  * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
- * See LICENCE file for licence of this piece of software
+ * philsh is under BSD licence, see LICENCE file for more informations.
  *
- */
-
+ */ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

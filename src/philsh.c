@@ -1,14 +1,13 @@
-/* 
- * philsh.c
- *
+/*
  * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
- * See LICENCE file for licence of this piece of software.
+ * philsh is under BSD licence, see LICENCE file for more informations.
  *
- */
+ */ 
 
 /* on inclu les headers */
 #include "headers.h"
 
+/* {{{ variables globales */
 /* le chemin de l'executable par exemple /bin/echo */
 char *chemin;
 
@@ -25,9 +24,13 @@ const struct builtin builtin_command[] =
    {"cd", internal_cd},
    {"whoami", whoami},
    {"alias", alias},
+   {"unalias", unalias},
+   {"source", source},
    {NULL, NULL}
 };
+/* }}} */
 
+/* {{{ init_env */
 /* Cette fonction initialise l'environnement
  * Si $HOME et $PATH n'existent pas, il faut
  * les créer... En effet, si on lance le programme
@@ -49,7 +52,9 @@ void init_env(void)
       putenv("PATH=/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin");
    return;
 }
+/* }}} */
 
+/* {{{ parse saisie() */
 /* Cette fonction decoupe la saisie suivant les
  * espaces ou les guillemets, elle alloue le tout dans argv
  * Elle renvoie le dernier entier alloué (on s'en sert pour bien
@@ -68,7 +73,7 @@ int parse_saisie(char *saisie, size_t buf_size, char **argv)
    for(;*p != '\0'; p++)
    {
       assert(i < buf_size+2);
-      if(*p == '"')
+      if(*p == '"'||*p == '\'')
       {
 	 gui = (gui) ? 0 : 1;
 	 continue;
@@ -107,6 +112,8 @@ int parse_saisie(char *saisie, size_t buf_size, char **argv)
  * en prenant en compte les espaces et les guillemets,
  * elle en profite pour rentrer la taille du mot le plus
  * long dans lenght (pour fixer la taille du buffer ensuite...)
+ * TODO : ces fonctions confondent " et ' et ne supportent pas
+ * le \ ...
  */
 int compter_mots(char *saisie, size_t *lenght)
 {
@@ -128,7 +135,7 @@ int compter_mots(char *saisie, size_t *lenght)
       words++;
    for(;*p != '\0';p++)
    {
-      if(*p == '"')
+      if(*p == '"'||*p == '\'')
       {
 	 gui = (gui) ? 0 : 1;
 	 continue;
@@ -152,15 +159,16 @@ int compter_mots(char *saisie, size_t *lenght)
    return words;
 }
 
+/* }}} */
 
+/* {{{ exec_saisie */
+/* Interprète saisie et l'execute */
 int exec_saisie(char *saisie)
 {
-   int i;
-   int argc;
+   int i, argc, ret;
    char **argv;
    size_t buf_size;
-   char *p, *buffer = NULL;
-   char c;
+   char *p, *buffer = NULL, c;
    extern alias_ll *liste_alias;
    alias_ll *alias;
    alias = liste_alias;
@@ -171,22 +179,29 @@ int exec_saisie(char *saisie)
       return 0;
    while (*p == ' ')
       p++;
+   /* On regarde si le premier mot n'est pas un alias */
    while(alias != NULL)
    {
       if (!strncmp(alias->name, p, strlen(alias->name)))
       {
+	 /* c est le caractère juste apres l'alias trouvé
+	  * car il faut distinguer
+	  * ls et lsblablia */
 	 c = *(p+strlen(alias->name));
 	 if ((c != '\0')&&(c != ' '))
 	 {
 	    alias = alias->next;
 	    continue;
 	 }
+	 /* Si c'est un alias on alloue buffer */
 	 buffer = malloc(sizeof(char) * (1+strlen(alias->cmd)+strlen(p+strlen(alias->name))));
 	 sprintf(buffer, "%s%s", alias->cmd, p+strlen(alias->name));
 	 break;
       }
       alias = alias->next;
    }
+   /* Si buffer n'est pas aloué, alors il n'y avait
+    * pas d'alias */
    if(buffer == NULL)
       buffer = saisie;
    argc = compter_mots(buffer, &buf_size);
@@ -198,8 +213,11 @@ int exec_saisie(char *saisie)
     * en lisant le code de sash (app-shell/sash sur gentoo)
     * je me suis rendu compte qu'il utilisait system() a tout-vat,
     * du coup je me dis pourquoi pas ? C'est bien sûr temporaire !
+    * Si la commande est alias on veut pouvoir continuer à faire
+    * alias lll="ls -l | less" par exemple, d'où la première
+    * instruction...
     */
-   if(strchr(buffer, '|')||strchr(buffer, '*')||strchr(buffer, '>')||strchr(buffer, '<')||strstr(buffer, "&&")||strchr(buffer, '`')||strchr(buffer, '$')||strchr(buffer, '\\'))
+   if(strncmp(buffer, "alias", 5) &&(strchr(buffer, '|')||strchr(buffer, '*')||strchr(buffer, '>')||strchr(buffer, '<')||strstr(buffer, "&&")||strchr(buffer, '`')||strchr(buffer, '$')||strchr(buffer, '\\')))
    {
       i = system(buffer);
       if (buffer != saisie)
@@ -208,17 +226,26 @@ int exec_saisie(char *saisie)
    }
    argv = malloc (sizeof(char *) * (argc+1));
    argc = parse_saisie(buffer, buf_size, argv);
+   /* Si buffer contenait un alias */
    if (buffer != saisie)
       free(buffer);
    argc++;
    argv[argc] = NULL;
-   exec_cmd(argc, argv);
+   /* La fonction qui execute vraiment la commande
+    * avec (ou sans) fork() */
+   ret = exec_cmd(argc, argv);
    for (i = 0; i < argc; i++)
       free(argv[i]);
    free(argv);
-   return 0;
+#ifdef DEBUG
+   printf("valeur retour : %d\n", ret);
+#endif
+   return ret;
 }
 
+/* }}} */
+
+/* {{{ main() */
 /* Ici commence l'aventure */
 int main (int argc, char **argv)
 {
@@ -233,9 +260,11 @@ int main (int argc, char **argv)
    /* Initialisation de la config */
    uid_t uid = getuid();
    struct passwd *user = getpwuid(uid);
+   init_config("/etc/philsh/philshrc");
    config_file = malloc(sizeof(char) * (15+strlen(user->pw_dir)));
    sprintf(config_file, "%s/%s", user->pw_dir, ".philshrc");
    init_config(config_file);
+   free(config_file);
    /* La super boucle du phil shell */
    for (;;)
    {
@@ -250,8 +279,9 @@ int main (int argc, char **argv)
    }
    return 0;
 }
+/* }}} */
 
-
+/* {{{ options_philsh */
 int options_philsh(int argc, char **argv)
 {
    const char *optstring = "hvc";
@@ -289,10 +319,14 @@ int options_philsh(int argc, char **argv)
    return 0;
 }
 
+/* }}} */
+
+/* {{{ afficher_aide */
+
 void afficher_aide(void)
 {
 
-   printf("PHILSH version %s\n\
+   printf("PHILSH version "PHILSH_VERSION"\n\
 	 philsh [OPTION]...\n\
 	 -c, --execute commande (arguments)   Executer la commande puis quitter\n\
 	 -h, --help                           afficher l'aide\n\
@@ -319,7 +353,7 @@ void afficher_aide(void)
 	 ne marchent pas mais c'est un des objectifs prioritaires de philsh.\n\
 	 Par contre depuis la version 0.2, la mise en backgroud des procéssus avec & fonctionne\n\
 	 et la gestion des signaux fonctionne partiellement\n\
-	 Philsh comporte des built-in commandes : %s ; ls n'y est pas encore (il était présent\n\
+	 Philsh comporte des built-in commandes : "PHILSH_BUILTIN" ; ls n'y est pas encore (il était présent\n\
 	       dans la version 0.1 mais le code n'était pas de moi donc ça compte pas :-)\n\
 	 Il n'y a pas non plus de boucles possible (if, then, else, fi, for, do, done, while)\n\
 	 Philsh à pour but la complexité, donc tout (le maximum possible) est alloué dynamiquement\n\
@@ -350,11 +384,13 @@ void afficher_aide(void)
 	 \n\
 	 <[CONTACT]>\n\
 	 Vous pouvez contacter les auteurs par mail :\n\
-	 Philippe Pepiot alias philpep %s\n\
+	 Philippe Pepiot alias philpep "PHILSH_MAIL"\n\
 	 rhaamo <markocpc@gmail.com>\n\
-	 <%s>\n\
-	 \n\n\n", PHILSH_VERSION, PHILSH_BUILTIN, PHILSH_MAIL, PHILSH_HTTP);
+	 <"PHILSH_HTTP">\n\
+	 \n\n\n");
    return;
 }
 
-
+/* }}} */
+/* vim:fdm=marker:
+ */

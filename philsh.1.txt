@@ -1,3 +1,5 @@
+:man source: philsh 0.2
+:man manual: Philsh's manual
 philsh(1)
 =========
 
@@ -26,10 +28,50 @@ OPTIONS
 *-v*, *--version*::
   Print philsh version to standard output, then exit.
 
+BUILTIN COMMANDS
+----------------
+
+*cd*::
+ Change the working directory.
+*pwd*::
+ Print current working directory.
+*env*, *env* ['command']::
+ Print environment variables or run 'command'.
+*which*, *which* [*-a* | *--all*] 'program'::
+ Print full path of 'program'
+*jobs*::
+ Print child process list who are runnig.
+*alias*, *alias* [*-L*] ['alias_name[=string]']::
+ Define or display aliases.
+*unalias*, *unalias* [*-a*] ['alias_name']::
+ Remove alias definition.
+*uname*, *uname* [*-a* | *-s* | *-n* | *-r* | *-v* ]::
+ Print system information.
+*whoami*::
+ Print effective user id
+
+CONFIGURATION
+-------------
+
+*philsh* is configured by '$HOME/.philshrc' for user configuration and by
+'/etc/philsh/philshrc' for global configuration.
+Theses configurations files must be simple philsh scripts. An example is located
+in '/usr[/local]/share/philsh/philshrc.example'.
+
 BUGS
 ----
 
 Philsh isn't sable for now, so use it at your own risk. :)
+Here is somes Known bugs.
+
+*Builtin cd and pwd command*, 'src/int/cd.c' & 'src/int/pwd.c'::
+ Theses functions don't support symbolics links.
+*Problem with signal*, '????'::
+ - A EOF (Ctrl-D) cause a segmentation fault in philsh.
+ - The suspend command (Ctrl-Z), don't work.
+*Problem with readline*, 'src/philsh.c'::
+ - A big command cause a prompt error with readline.
+
 
 AUTHORS
 -------
@@ -42,9 +84,14 @@ Philippe Pepiot <philippe.pepiot@gmail.com> for the code.
 WWW
 ---
 
-Git repository at http://tux-atome.fr/philsh.git
+Git repository at <http://tux-atome.fr/philsh.git/[]>
 
 COPYING
 -------
 
-See LICENCE file
+philsh is under BSD licence, see LICENCE file for more informations.
+
+SEE ALSO
+--------
+
+Somes others shells : 'bash(1)', 'zsh(1)', 'sh(1)'...

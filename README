@@ -21,7 +21,7 @@
 #   il suffit de faire comme d'habitude avec
 #   le signe & à la fin de votre saisie.
 # - Il comporte quelques commandes internes comme
-#   cd, pwd, which, env.
+#   cd, pwd, which, env et d'autres (philsh --help)
 # - Il à pour unique but de m'apprendre à programmer
 #   en C et à me servir de svn, de vim, des Makefiles etc.
 # - Si vous lisez ce code, sachez que je n'ai jamais suivis
@@ -35,18 +35,16 @@
 #   
 #   DEPENDANCE :
 #   - readline, ou libreadline
-#   - CMake 2.6
-#   - libconfuse
+#   - CMake >= 2.6
 #
 #   UTILISATION :
 #   - cd philsh
-#   - make build
-#   - cmake ..
+#   - cmake .
 #   - make
 #   - sudo make install si vous souhaitez l'installer
 #   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
 #   - lancez le via ./philsh (dans un vrai shell :)
-#   - N'oubliez pas de copier philshrc dans ~/.philshrc (plus utiliser pour le moment)
+#   - N'oubliez pas de copier philshrc dans ~/.philshrc
 #
 #
 #===========================#

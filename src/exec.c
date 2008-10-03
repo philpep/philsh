@@ -1,10 +1,8 @@
 /*
- * exec.c
  * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
- * See LICENCE file for licence of this piece of software
+ * philsh is under BSD licence, see LICENCE file for more informations.
  *
- */
-
+ */ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,7 +16,8 @@
 #include "exec.h"
 #include "int/internal.h"
 #include "philsh.h" /* Pour options_philsh() */
-#include "int/alias.h"
+#include "int/alias.h" /* Pour alias() unalias() */
+#include "readconfig.h" /* Pour source() */
 
 extern char *chemin;
 struct lljobs *liste_jobs = NULL;
@@ -26,6 +25,7 @@ struct lljobs *liste_jobs = NULL;
 extern const struct builtin builtin_command[];
 extern alias_ll *liste_alias;
 
+/* {{{ exec_cmd_external() */
 int exec_cmd_external(char **argv)
 {
    pid_t pid;
@@ -33,11 +33,11 @@ int exec_cmd_external(char **argv)
    switch (errno)
    {
       case EAGAIN:
-	 perror("Philsh: pas assez de memoire pour créer le fork\n");
+	 perror("philsh: cannot allocate sufficient memory to create fork\n");
 	 exit(EAGAIN);
 	 break;
       case ENOMEM:
-	 perror("Philsh: Le noyau n'a pas assez de memoire");
+	 perror("philsh: failed to allocate the necessary kernel Structure\n");
 	 exit(ENOMEM);
 	 break;
    }
@@ -45,7 +45,7 @@ int exec_cmd_external(char **argv)
    {
       if (which_cmd(argv[0]) != 0)
       {
-	 fprintf(stderr, "Philsh: %s commande non trouvée\n", argv[0]);
+	 fprintf(stderr, "philsh: command not found : %s\n", argv[0]);
 	 exit(1);
       }
       return execv(chemin, argv);
@@ -56,12 +56,25 @@ int exec_cmd_external(char **argv)
       return -1;
    return -1;
 }
+/* }}} */
 
+
+/* {{{ exec_cmd() */
+/* LA fonction d'execution de philsh
+ * TODO : simplifier, c'est un bordel
+ * monstrueux !
+ * Cette fonction renvoie le code de sortie
+ * de l'application lancée (par un moyen on ne
+ * peut plus douteux :)
+ */
 int exec_cmd(int argc, char **argv)
 {
-   char *p;
-   char *chemin_cmd_locale = NULL;
-   int bg = 0, i, err;
+   int bg = 0, i, err, ret, file, null;
+   char *p, *chemin_cmd_locale = NULL;
+   extern alias_ll *liste_alias;
+   pid_t pid;
+   const struct builtin *p_builtin;
+   extern char **environ;
    /* bg = 1 : commande en backgroud */
    p = &argv[argc-1][strlen(argv[argc-1])-1];
    if(*p == '&')
@@ -82,12 +95,18 @@ int exec_cmd(int argc, char **argv)
    /* Si la commande est exit : quitter le shell */
    if (!strcmp(argv[0], "exit"))
    {
+      /* S'il y a des jobs en cours, il vont
+       * se retrouver sans père */
       if (liste_jobs != NULL)
       {
-	 fprintf(stderr, "Philsh: vous avez des jobs en cours\n");
+	 fprintf(stderr, "philsh: you have running jobs\n");
 	 afficher_liste_jobs(liste_jobs);
 	 return 1;
       }
+      /* On libère la memoire et on
+       * quitte */
+      while(liste_alias != NULL)
+	 del_alias(liste_alias->name);
       for(i = 0; i < argc; i++)
 	 free(argv[i]);
       free(argv);
@@ -95,6 +114,10 @@ int exec_cmd(int argc, char **argv)
    }
    if (!strcmp(argv[0], "alias"))
       return alias(argc, argv);
+   if(!strcmp(argv[0], "unalias"))
+      return unalias(argc, argv);
+   if(!strcmp(argv[0], "source"))
+      return source(argc, argv);
    /* Si la commande est cd, on ne l'execute pas
     * dans le fork, sinon le changement de repertoire
     * s'effectue dans le processus fils :) */
@@ -109,7 +132,7 @@ int exec_cmd(int argc, char **argv)
    else if (strchr(argv[0], '='))
       return internal_setenv(argv[0]);
    /* On crée le fork */
-   pid_t pid = fork();
+   pid = fork();
    err = errno;
    if (pid == 0)
    {
@@ -118,10 +141,9 @@ int exec_cmd(int argc, char **argv)
        * si la commande est externe, elle est executé
        * par execvp. */
       /* S'il faut lancer en backgroud */
-      const struct builtin *p_builtin;
       if(bg)
       {
-	 int null = open("/dev/null", O_RDONLY);
+	 null = open("/dev/null", O_RDONLY);
 	 if (null == -1)
 	    exit(1);
 	 dup2(null, 0);
@@ -152,18 +174,17 @@ int exec_cmd(int argc, char **argv)
 	 argv[0]++;
       else if (argv[0][0] == '/')
       {
-	 int file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
-	 extern char **environ;
+	 file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
 	 if ((errno == EACCES)||(file == -1))
 	 {
-	    fprintf(stderr, "Philsh: %s permission refusée\n", argv[0]);
+	    fprintf(stderr, "philsh: cannot execute %s : Permission denied\n", argv[0]);
 	    exit(EACCES);
 	 }
 	 fexecve(file, argv, environ);
       }
       /* Si la commande est externe */
       if (which_cmd (argv[0]) != 0)
-	 fprintf(stderr, "Philsh : %s commande inconnue\n", argv[0]);
+	 fprintf(stderr, "philsh : command not found : %s\n", argv[0]);
       else
 	 execv(chemin, argv);
       exit(127);
@@ -174,7 +195,7 @@ int exec_cmd(int argc, char **argv)
        * Il attent que le processus fils
        * se termine */
       signal(SIGINT, SIG_IGN);
-      while(!WaitForChild(pid));
+      while(!WaitForChild(pid, &ret));
       signal(SIGINT, HandleInterrupt);
    }
    else if(pid != -1 && bg)
@@ -196,10 +217,17 @@ int exec_cmd(int argc, char **argv)
       }
       return -1;
    }
-   return 0;
+   return ret;
 }
+/* }}} */
 
-int WaitForChild(pid_t pid)
+/* {{{ WaitForChild() && HandleInterrupt() */
+/* Cette fonction attend un changement d'état d'un
+ * processus fils.
+ * Si le fils est terminé, on stoque sa valeur
+ * de retour dans ret...
+ */
+int WaitForChild(pid_t pid, int *ret)
 {
    pid_t cpid;
    int st;
@@ -223,6 +251,7 @@ int WaitForChild(pid_t pid)
 #ifdef VERBOSE
 	    printf("\033[31mFin du processus de pid : %d, code de retour : %d\n\033[37m", pid, WEXITSTATUS(st));
 #endif
+	    *ret = WEXITSTATUS(st);
 	    return 1;
 	 }
 	 else
@@ -250,7 +279,9 @@ void HandleInterrupt(int sig)
    /* Reinstaller la routine. */
    signal(SIGINT, HandleInterrupt);
 }
+/* }}} */
 
+/* {{{ jobs functions */
 lljobs *add_job(lljobs *liste, char *name, pid_t pid)
 {
    struct lljobs *new = malloc(sizeof(lljobs));
@@ -310,3 +341,9 @@ int afficher_liste_jobs(lljobs *liste)
    }
    return 0;
 }
+
+/* }}} */
+
+
+/* vim:fdm=marker:
+ */

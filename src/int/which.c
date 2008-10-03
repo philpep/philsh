@@ -1,3 +1,8 @@
+/*
+ * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
+ * philsh is under BSD licence, see LICENCE file for more informations.
+ *
+ */ 
 #include <stdio.h>
 #include <dirent.h>
 #include <string.h>
@@ -105,7 +110,6 @@ int which(char **argv, int a, int ret)
       return ret;
    if(getenv("PATH") == NULL)
    {
-      fprintf(stderr, "La variable d'environement PATH n'existe pas !\nImpossible de trouver %s\n", argv[0]);
       return -1;
    }
    int bingo = 0;
@@ -176,7 +180,7 @@ int which(char **argv, int a, int ret)
    }
    /* Si on est arrivé jusqu'ici, c'est qu'on a rien trouvé */
    if(!bingo)
-      fprintf(stderr, "%s non trouvé\n", command);
+      fprintf(stderr, "%s not found\n", command);
    free(path);
    return which(argv+1, a, 1);
 }

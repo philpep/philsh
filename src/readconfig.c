@@ -1,9 +1,8 @@
 /*
- * readconfig.c
  * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
- * See LICENCE for licence of this piece of software
+ * philsh is under BSD licence, see LICENCE file for more informations.
  *
- */
+ */ 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,12 +27,10 @@ int init_config(char *config_file)
    struct stat buf;
    if(-1 == (fd = open(config_file, O_RDONLY)))
    {
-      fprintf(stderr, "Philsh: %s n'est pas accésible !\nPhilsh: Utilisation de la configuration par default\n", config_file);
       return DEFAULT_CONFIG;
    }
    if (-1 == stat(config_file, &buf))
    {
-      perror("Philsh: impossible d'obtenir des informations sur le fichier de configuration\n");
       close(fd);
       exit(EXIT_FAILURE);
    }
@@ -80,6 +77,19 @@ int parse_file(char *ptr)
    return parse_file(p+1);
 }
 
-
-
-
+/* Builtin source, execute une à une les lignes
+ * d'un fichier */
+int source(int argc, char **argv)
+{
+   if (argc != 2)
+   {
+      fprintf(stderr, "Philsh: Usage : source <file>\n");
+      return 1;
+   }
+   if (init_config(argv[1]) == DEFAULT_CONFIG)
+   {
+      fprintf(stderr, "source : aucuns fichier ou dossier de ce type\n");
+      return 1;
+   }
+   return 0;
+}
