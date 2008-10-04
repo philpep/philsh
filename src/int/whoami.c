@@ -10,6 +10,7 @@
 #include <getopt.h>
 #include <sys/types.h>
 #include "../philsh_build.h"
+#include "err.h"
 
 int whoami(int argc, char **argv)
 {
@@ -44,7 +45,7 @@ int whoami(int argc, char **argv)
    if(NULL == (user = getpwuid(uid)))
    {
       fprintf(stderr, "Philsh : Impossible d'obtenir le nom de l'utilisateur\n");
-      return -1;
+      return ERR_EXEC;
    }
    printf("%s\n", user->pw_name);
    return 0;

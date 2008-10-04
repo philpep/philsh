@@ -49,6 +49,10 @@ BUILTIN COMMANDS
  Print system information.
 *whoami*::
  Print effective user id
+*help*::
+ Print informations about the philsh project (in french ;)
+*exit*:: *exit* ['return value']
+ Exit philsh, return 0 or value if it's set
 
 CONFIGURATION
 -------------

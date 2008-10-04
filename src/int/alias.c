@@ -17,7 +17,10 @@ int alias(int argc, char **argv)
    tmp = liste_alias;
    /* Manque d'arguments */
    if (argc != 2)
-      return fprintf(stderr, "philsh : Usage : alias [-L|name=\"command\"\n");
+   {
+      fprintf(stderr, "philsh : Usage : alias [-L|name=\"command\"\n");
+      return ERR_ARG;
+   }
    /* L'option -p permet d'afficher les alias de la session en cours */
    if (!strcmp(argv[1], "-L"))
    {
@@ -100,7 +103,7 @@ int unalias(int argc, char **argv)
    if (argc != 2)
    {
       fprintf(stderr, "philsh: Usage : Unalias <alias_name>\n");
-      return 1;
+      return ERR_ARG;
    }
    /* Option -a, on supprime tous les alias */
    if (!strcmp(argv[1], "-a"))
@@ -111,7 +114,7 @@ int unalias(int argc, char **argv)
    }
    if(del_alias(argv[1]) != 0)
       fprintf(stderr, "%s is not a valid alias\n", argv[1]);
-   return 1;
+   return ERR_EXEC;
 }
 
 

@@ -24,6 +24,56 @@ struct lljobs *liste_jobs = NULL;
 
 extern const struct builtin builtin_command[];
 extern alias_ll *liste_alias;
+/* {{{ builtin exit && jobs && help */
+int help(int argc, char **argv)
+{
+   if(argc != 1)
+   {
+      fprintf(stderr,"Philsh: Usage: %s : Print help\n", argv[0]);
+      return ERR_ARG;
+   }
+   afficher_aide();
+   return 0;
+}
+
+int jobs(int argc, char **argv)
+{
+   if(argc != 1)
+   {
+      fprintf(stderr,"Philsh : Usage: %s : Print list of runnings jobs\n", argv[0]);
+      return ERR_ARG;
+   }
+   afficher_liste_jobs(liste_jobs);
+   return 0;
+}
+
+
+int exit_philsh(int argc, char **argv)
+{
+   int ret = 0,i;
+   if(argc > 2)
+   {
+      fprintf(stderr,"Philsh : Usage: exit [EXIT_CODE]");
+      return ERR_ARG;
+   }
+   if(argc == 2)
+      ret = atoi(argv[1]);
+   if(liste_jobs != NULL)
+   {
+      fprintf(stderr,"You have runnings jobs\n");
+      afficher_liste_jobs(liste_jobs);
+      return ERR_EXEC;
+   }
+   /* On libère la memoire et on
+    * quitte */
+   while(liste_alias != NULL)
+      del_alias(liste_alias->name);
+   for(i = 0; i < argc; i++)
+      free(argv[i]);
+   free(argv);
+   exit(ret);
+}
+/* }}} */
 
 /* {{{ exec_cmd_external() */
 int exec_cmd_external(char **argv)
@@ -69,12 +119,19 @@ int exec_cmd_external(char **argv)
  */
 int exec_cmd(int argc, char **argv)
 {
-   int bg = 0, i, err, ret, file, null;
+   int bg = 0, err, ret, file, null;
    char *p, *chemin_cmd_locale = NULL;
    extern alias_ll *liste_alias;
    pid_t pid;
    const struct builtin *p_builtin;
    extern char **environ;
+   p_builtin = builtin_command;
+   while(p_builtin->name != NULL)
+   {
+      if((!strcmp(argv[0], p_builtin->name))&&(p_builtin->fork != 0))
+	 return p_builtin->p(argc, argv);
+      p_builtin++;
+   }
    /* bg = 1 : commande en backgroud */
    p = &argv[argc-1][strlen(argv[argc-1])-1];
    if(*p == '&')
@@ -92,44 +149,7 @@ int exec_cmd(int argc, char **argv)
       else
 	 *p = '\0';
    }
-   /* Si la commande est exit : quitter le shell */
-   if (!strcmp(argv[0], "exit"))
-   {
-      /* S'il y a des jobs en cours, il vont
-       * se retrouver sans père */
-      if (liste_jobs != NULL)
-      {
-	 fprintf(stderr, "philsh: you have running jobs\n");
-	 afficher_liste_jobs(liste_jobs);
-	 return 1;
-      }
-      /* On libère la memoire et on
-       * quitte */
-      while(liste_alias != NULL)
-	 del_alias(liste_alias->name);
-      for(i = 0; i < argc; i++)
-	 free(argv[i]);
-      free(argv);
-      exit(0);
-   }
-   if (!strcmp(argv[0], "alias"))
-      return alias(argc, argv);
-   if(!strcmp(argv[0], "unalias"))
-      return unalias(argc, argv);
-   if(!strcmp(argv[0], "source"))
-      return source(argc, argv);
-   /* Si la commande est cd, on ne l'execute pas
-    * dans le fork, sinon le changement de repertoire
-    * s'effectue dans le processus fils :) */
-   if (!strcmp(argv[0], "cd"))
-      return internal_cd(argc, argv);
-   else if (!strcmp(argv[0], "help"))
-   {
-      afficher_aide();
-      return 0;
-   }
-   /* Meme remaque */
-   else if (strchr(argv[0], '='))
+   if (strchr(argv[0], '='))
       return internal_setenv(argv[0]);
    /* On crée le fork */
    pid = fork();
@@ -149,26 +169,21 @@ int exec_cmd(int argc, char **argv)
 	 dup2(null, 0);
 	 signal(SIGINT, SIG_IGN);
       }
-      if(!strcmp(argv[0], "jobs"))
-      {
-	 afficher_liste_jobs(liste_jobs);
-	 exit(0);
-      }
-      /* Si on à affaire à un ./ ou un exec */
-      else if ( (argv[0][0] == '.')&&(argv[0][1] == '/') )
-      {
-	 chemin = get_current_dir();
-	 chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(argv[0])));
-	 assert(chemin_cmd_locale != NULL);
-	 sprintf(chemin_cmd_locale, "%s/%s", chemin, argv[0]+2);
-	 execv(chemin_cmd_locale, argv);
-      }
       p_builtin = builtin_command;
       while(p_builtin->name != NULL)
       {
 	 if(!strcmp(argv[0], p_builtin->name))
 	    exit (p_builtin->p(argc, argv));
 	 p_builtin++;
+      }
+      /* Si on à affaire à un ./  */
+      if ( (argv[0][0] == '.')&&(argv[0][1] == '/') )
+      {
+	 chemin = get_current_dir();
+	 chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(argv[0])));
+	 assert(chemin_cmd_locale != NULL);
+	 sprintf(chemin_cmd_locale, "%s/%s", chemin, argv[0]+2);
+	 execv(chemin_cmd_locale, argv);
       }
       if (argv[0][0] == '_')
 	 argv[0]++;
@@ -346,4 +361,4 @@ int afficher_liste_jobs(lljobs *liste)
 
 
 /* vim:fdm=marker:
- */
+*/

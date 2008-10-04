@@ -1,6 +1,8 @@
 #ifndef INTERNAL_HEADER
 #define INTERNAL_HEADER
 
+#include "err.h"
+
 char * get_current_dir(void);
 int internal_cd(int argc, char **argv);
 int internal_pwd(int argc, char **argv);
@@ -19,8 +21,9 @@ char *get_current_dir_name(void);
 typedef struct builtin builtin;
 struct builtin
 {
-	char *name;
-	int (*p)(int, char **);
+	char *name; /* Le nom de la commande */
+	int (*p)(int, char **); /* Pointeur sur la fonction à appeler */
+	int fork; /* 0 s'il faut lancer dans un nouveau processus */
 };
 
 extern const struct builtin builtin_command[];

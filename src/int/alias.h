@@ -1,6 +1,7 @@
 #ifndef ALIAS_HEADER
 #define ALIAS_HEADER
 
+#include "err.h"
 
 /* La structure des alias, c'est
  * une liste chainée.

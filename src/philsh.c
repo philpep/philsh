@@ -17,16 +17,19 @@ char *chemin;
  */
 const struct builtin builtin_command[] =
 {
-   {"pwd", internal_pwd},
-   {"which", internal_which},
-   {"uname", internal_uname},
-   {"env", internal_env},
-   {"cd", internal_cd},
-   {"whoami", whoami},
-   {"alias", alias},
-   {"unalias", unalias},
-   {"source", source},
-   {NULL, NULL}
+   {"pwd", internal_pwd, 1},
+   {"which", internal_which, 0},
+   {"uname", internal_uname, 0},
+   {"env", internal_env, 0},
+   {"cd", internal_cd, 1},
+   {"whoami", whoami, 1},
+   {"alias", alias, 1},
+   {"unalias", unalias, 1},
+   {"source", source, 1},
+   {"exit", exit_philsh, 1},
+   {"jobs", jobs, 1},
+   {"help", help, 1},
+   {NULL, NULL, 0}
 };
 /* }}} */
 
@@ -171,6 +174,7 @@ int exec_saisie(char *saisie)
    char *p, *buffer = NULL, c;
    extern alias_ll *liste_alias;
    alias_ll *alias;
+   /**********/
    alias = liste_alias;
    p = saisie;
    argc = compter_mots(saisie, &buf_size);
@@ -249,17 +253,16 @@ int exec_saisie(char *saisie)
 /* Ici commence l'aventure */
 int main (int argc, char **argv)
 {
+   char *config_file, *saisie = NULL, *prompt;
+   uid_t uid = getuid();
+   struct passwd *user = getpwuid(uid);
+   int ret = 0;
    /* On teste les options avec lesquelles
     * philsh est appellé */
    options_philsh(argc, argv);
    /* On initialise l'environnement */
    init_env();
-   char *config_file;
-   char *saisie = NULL;
-   char *prompt;
    /* Initialisation de la config */
-   uid_t uid = getuid();
-   struct passwd *user = getpwuid(uid);
    init_config("/etc/philsh/philshrc");
    config_file = malloc(sizeof(char) * (15+strlen(user->pw_dir)));
    sprintf(config_file, "%s/%s", user->pw_dir, ".philshrc");
@@ -268,13 +271,13 @@ int main (int argc, char **argv)
    /* La super boucle du phil shell */
    for (;;)
    {
-      prompt = set_prompt();
+      prompt = set_prompt(ret);
       /* La fonction readline est magique */
       saisie = readline(prompt);
       free(prompt);
       if (saisie && *saisie)
 	 add_history(saisie);
-      exec_saisie(saisie);
+      ret = exec_saisie(saisie);
       free(saisie);
    }
    return 0;

@@ -11,4 +11,4 @@ alias lll='ls --color=auto -lh | less'
 #
 #
 # A login with cowsay
-cowsay `uname -a`
+#cowsay `uname -a`

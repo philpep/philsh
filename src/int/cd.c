@@ -59,7 +59,7 @@ int internal_cd(int argc, char **argv)
 	 {
 	    fprintf(stderr, "Philsh: aucun utilisateur de ce nom : %s\n", name);
 	    free(name);
-	    return -1;
+	    return ERR_ARG;
 	 }
 	 free(name);
 	 if (p == NULL)

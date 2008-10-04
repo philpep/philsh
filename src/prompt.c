@@ -13,14 +13,13 @@
 #include "int/internal.h"
 #include "prompt.h"
 
-char *set_prompt(void)
+char *set_prompt(int ret)
 {
    /* Déclarations */
-   char *prompt;
+   char *prompt, *pwd;
    struct utsname machine;
    struct passwd *user;
    uid_t uid;
-   char *pwd;
    size_t prompt_size;
    /* Recuperation des informations sur l'utilisateur
     * et sur le systeme */
@@ -28,14 +27,22 @@ char *set_prompt(void)
    user = getpwuid(uid);
    pwd = get_current_dir();
    uname(&machine);
-   prompt_size = 39 + strlen(user->pw_name) + \
+   prompt_size = 60 + strlen(user->pw_name) + \
 		 strlen(machine.nodename) + strlen(pwd);
    prompt = malloc(sizeof(char) * prompt_size);
+   if(ret != 0)
+      sprintf(prompt, "[\033[34m%d\033[36m!\033[37m][\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m", ret, user->pw_name, machine.nodename);
+   else
+      sprintf(prompt, "[\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m", user->pw_name, machine.nodename);
    /* Permet de remplacer $HOME par ~ */
    if(!strncmp(pwd, user->pw_dir, strlen(user->pw_dir)))
-      sprintf(prompt, "[\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m~%s\033[37m] $>", user->pw_name, machine.nodename, pwd+strlen(user->pw_dir));
+   {
+      strcat(prompt, "~");
+      strcat(prompt, pwd+strlen(user->pw_dir));
+   }
    else
-      sprintf(prompt, "[\033[31m%s\033[37m@\033[35m%s\033[37m: \033[34m%s\033[37m] $>", user->pw_name, machine.nodename, pwd);
+      strcat(prompt, pwd);
+   strcat(prompt, "\033[37m $>");
    free(pwd);
    return prompt;
 }

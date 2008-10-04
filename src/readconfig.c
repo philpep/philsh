@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include "philsh.h"
 #include "readconfig.h"
+#include "int/err.h"
 
 
 typedef unsigned short ushort; 
@@ -84,12 +85,12 @@ int source(int argc, char **argv)
    if (argc != 2)
    {
       fprintf(stderr, "Philsh: Usage : source <file>\n");
-      return 1;
+      return ERR_ARG;
    }
    if (init_config(argv[1]) == DEFAULT_CONFIG)
    {
       fprintf(stderr, "source : aucuns fichier ou dossier de ce type\n");
-      return 1;
+      return ERR_EXEC;
    }
    return 0;
 }

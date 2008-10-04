@@ -30,7 +30,7 @@ int internal_pwd(int argc, char **argv)
    if (argc > 1)
    {
       fprintf(stderr, "Philsh : Option inconue : %s\n", argv[1]);
-      return -1;
+      return ERR_ARG;
    }
    char *current_dir;
    current_dir = get_current_dir();
