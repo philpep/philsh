@@ -15,7 +15,7 @@
 file_instruction *creat_liste_instruction(char *saisie)
 {
    char *p, *q, *r;
-   int gui;
+   int gui = 0;
    enum _redirection_type red_type;
    file_instruction *liste = NULL;
    /**************/
