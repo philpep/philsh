@@ -182,5 +182,8 @@ int which(char **argv, int a, int ret)
    if(!bingo)
       fprintf(stderr, "%s not found\n", command);
    free(path);
-   return which(argv+1, a, 1);
+   if(!bingo)
+      return which(argv+1, a, 1);
+   else
+      return which(argv+1, a, 0);
 }
