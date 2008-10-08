@@ -24,6 +24,8 @@ project(${PROJECT_NAME} C)
 set(philsh_src
   src/prompt.c
   src/exec.c
+  src/exec_instruction.c
+  src/file_instruction.c
   src/readconfig.c
   src/philsh.c
   src/int/alias.c

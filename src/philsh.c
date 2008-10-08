@@ -17,19 +17,19 @@ char *chemin;
  */
 const struct builtin builtin_command[] =
 {
-   {"pwd", internal_pwd, 1},
-   {"which", internal_which, 0},
-   {"uname", internal_uname, 0},
-   {"env", internal_env, 0},
-   {"cd", internal_cd, 1},
-   {"whoami", whoami, 1},
-   {"alias", alias, 1},
-   {"unalias", unalias, 1},
-   {"source", source, 1},
-   {"exit", exit_philsh, 1},
-   {"jobs", jobs, 1},
-   {"help", help, 1},
-   {NULL, NULL, 0}
+   {"pwd", internal_pwd, SAME_PROCESS},
+   {"which", internal_which, NEW_PROCESS},
+   {"uname", internal_uname, NEW_PROCESS},
+   {"env", internal_env, NEW_PROCESS},
+   {"cd", internal_cd, SAME_PROCESS},
+   {"whoami", whoami, SAME_PROCESS},
+   {"alias", alias, SAME_PROCESS},
+   {"unalias", unalias, SAME_PROCESS},
+   {"source", source, SAME_PROCESS},
+   {"exit", exit_philsh, SAME_PROCESS},
+   {"jobs", jobs, SAME_PROCESS},
+   {"help", help, SAME_PROCESS},
+   {NULL, NULL, NEW_PROCESS}
 };
 /* }}} */
 
@@ -52,116 +52,9 @@ void init_env(void)
    /* Si le PATH n'est pas fixé, il est impossible de le deviner
     * Dans ce cas on utilise un PATH classique UNIX */
    if (getenv("PATH") == NULL)
-      putenv("PATH=/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin");
+      setenv("PATH", "/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin", 0);
    return;
 }
-/* }}} */
-
-/* {{{ parse saisie() */
-/* Cette fonction decoupe la saisie suivant les
- * espaces ou les guillemets, elle alloue le tout dans argv
- * Elle renvoie le dernier entier alloué (on s'en sert pour bien
- * liberer la memoire ensuite) */
-int parse_saisie(char *saisie, size_t buf_size, char **argv)
-{
-   char *p;
-   p = saisie;
-   char *buffer;
-   int gui = 0;
-   size_t i = 0, j = 0;
-   buffer = malloc(sizeof(char) * buf_size+2);
-   assert(buffer != NULL);
-   while(*p == ' ')
-      p++;
-   for(;*p != '\0'; p++)
-   {
-      assert(i < buf_size+2);
-      if(*p == '"'||*p == '\'')
-      {
-	 gui = (gui) ? 0 : 1;
-	 continue;
-      }
-      if((*p == ' ')&&(!gui))
-      {
-	 buffer[i] = '\0';
-	 argv[j] = malloc(sizeof(char) * (1+strlen(buffer)));
-	 assert(argv[j] != NULL);
-	 strcpy(argv[j], buffer);
-#ifdef DEBUG
-	 printf("argv[%d] = '%s'\n", j, argv[j]);
-#endif
-	 i = 0;
-	 j++;
-	 while(*p == ' ')
-	    p++;
-	 p--;
-	 continue;
-      }
-      buffer[i] = *p;
-      i++;
-   }
-   buffer[i] = '\0';
-   argv[j] = malloc(sizeof(char) * (1+strlen(buffer)));
-   assert(argv[j] != NULL);
-   strcpy(argv[j], buffer);
-#ifdef DEBUG
-   printf("argv[%d] = '%s'\n", j, argv[j]);
-#endif
-   free(buffer);
-   return j;
-}
-
-/* Cette fonction compte les mots dans saisie
- * en prenant en compte les espaces et les guillemets,
- * elle en profite pour rentrer la taille du mot le plus
- * long dans lenght (pour fixer la taille du buffer ensuite...)
- * TODO : ces fonctions confondent " et ' et ne supportent pas
- * le \ ...
- */
-int compter_mots(char *saisie, size_t *lenght)
-{
-   char *p = strchr(saisie, '\0');
-   int words = 0;
-   size_t lenght_current = 0;
-   size_t lenght_max = 0;
-   int gui = 0;
-   p--;
-   while(*p == ' ')
-   {
-      *p = '\0';
-      p--;
-   }
-   p = saisie;
-   while(*p == ' ')
-      p++;
-   if(*p != '\0')
-      words++;
-   for(;*p != '\0';p++)
-   {
-      if(*p == '"'||*p == '\'')
-      {
-	 gui = (gui) ? 0 : 1;
-	 continue;
-      }
-      if((*p == ' ')&&(!gui))
-      {
-	 if (lenght_current > lenght_max)
-	    lenght_max = lenght_current;
-	 lenght_current = 0;
-	 words++;
-	 while(*p == ' ')
-	    p++;
-	 p--;
-	 continue;
-      }
-      lenght_current++;
-   }
-   if (lenght_current > lenght_max)
-      lenght_max = lenght_current;
-   *lenght = lenght_max;
-   return words;
-}
-
 /* }}} */
 
 /* {{{ exec_saisie */
@@ -174,7 +67,7 @@ int exec_saisie(char *saisie)
    char *p, *buffer = NULL, c;
    extern alias_ll *liste_alias;
    alias_ll *alias;
-   /**********/
+   /***********/
    alias = liste_alias;
    p = saisie;
    argc = compter_mots(saisie, &buf_size);
@@ -256,6 +149,7 @@ int main (int argc, char **argv)
    char *config_file, *saisie = NULL, *prompt;
    uid_t uid = getuid();
    struct passwd *user = getpwuid(uid);
+   file_instruction *liste_instruction = NULL;
    int ret = 0;
    /* On teste les options avec lesquelles
     * philsh est appellé */
@@ -277,7 +171,13 @@ int main (int argc, char **argv)
       free(prompt);
       if (saisie && *saisie)
 	 add_history(saisie);
-      ret = exec_saisie(saisie);
+      /* ret = exec_saisie(saisie); */
+      liste_instruction = creat_liste_instruction(saisie);
+      exec_file_instruction(liste_instruction);
+#ifdef DEBUG
+      afficher_liste_instruction(liste_instruction);
+#endif
+      free_file_instruction(liste_instruction);
       free(saisie);
    }
    return 0;

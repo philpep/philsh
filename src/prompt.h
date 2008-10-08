@@ -1,6 +1,6 @@
-#ifndef PROMPT_HEADER
-#define PROMPT_HEADER
+#ifndef _PROMPT_HEADER
+#define _PROMPT_HEADER
 
 char *set_prompt(int ret);
 
-#endif
+#endif /* _PROMPT_HEADER */

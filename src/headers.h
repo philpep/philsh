@@ -1,6 +1,7 @@
-#ifndef HEADERS
-#define HEADERS
+#ifndef _HEADER
+#define _HEADERS
 
+#define _BSD_SOURCE /* for setenv() definition */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,7 +25,7 @@
 #include "int/internal.h"
 #include "int/alias.h"
 #include "readconfig.h"
+#include "file_instruction.h"
+#include "exec_instruction.h"
 
-/* void config_init(void); */
-
-#endif
+#endif /* _HEADER */

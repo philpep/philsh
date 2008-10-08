@@ -1,7 +1,7 @@
-#ifndef ERR_HEADER
-#define ERR_HEADER
+#ifndef _ERR_HEADER
+#define _ERR_HEADER
 
 #define ERR_ARG 2
 #define ERR_EXEC 1
 
-#endif /* ERR_HEADER */
+#endif /* _ERR_HEADER */

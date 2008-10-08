@@ -1,5 +1,5 @@
-#ifndef ALIAS_HEADER
-#define ALIAS_HEADER
+#ifndef _ALIAS_HEADER
+#define _ALIAS_HEADER
 
 #include "err.h"
 
@@ -22,4 +22,4 @@ int del_alias(char *name);
 char *search_alias(alias_ll *liste, char *name);
 alias_ll *liste_alias;
 
-#endif /* ALIAS_HEADER */
+#endif /* _ALIAS_HEADER */

@@ -3,6 +3,7 @@
  * philsh is under BSD licence, see LICENCE file for more informations.
  *
  */ 
+#define _GNU_SOURCE /* for fexecve definition */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -108,7 +109,6 @@ int exec_cmd_external(char **argv)
 }
 /* }}} */
 
-
 /* {{{ exec_cmd() */
 /* LA fonction d'execution de philsh
  * TODO : simplifier, c'est un bordel
@@ -128,7 +128,7 @@ int exec_cmd(int argc, char **argv)
    p_builtin = builtin_command;
    while(p_builtin->name != NULL)
    {
-      if((!strcmp(argv[0], p_builtin->name))&&(p_builtin->fork != 0))
+      if((!strcmp(argv[0], p_builtin->name))&&(p_builtin->process == SAME_PROCESS))
 	 return p_builtin->p(argc, argv);
       p_builtin++;
    }

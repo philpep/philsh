@@ -1,5 +1,5 @@
-#ifndef INTERNAL_HEADER
-#define INTERNAL_HEADER
+#ifndef _INTERNAL_HEADER
+#define _INTERNAL_HEADER
 
 #include "err.h"
 
@@ -13,9 +13,12 @@ int internal_uname(int argc, char **argv);
 int internal_setenv(char *str);
 int internal_env(int argc, char **argv);
 int whoami(int argc, char **argv);
-/* Déclarations externes */
-int setenv (const char *name, const char *value, int overwrite);
-char *get_current_dir_name(void);
+
+/* Pour (*builtin).process */
+enum Fork
+{
+   NEW_PROCESS, SAME_PROCESS
+};
 
 /* Structure des built-in commandes */
 typedef struct builtin builtin;
@@ -23,10 +26,10 @@ struct builtin
 {
 	char *name; /* Le nom de la commande */
 	int (*p)(int, char **); /* Pointeur sur la fonction à appeler */
-	int fork; /* 0 s'il faut lancer dans un nouveau processus */
+	enum Fork process; /* SAME_PROCESS ou NEW_PROCESS */
 };
 
 extern const struct builtin builtin_command[];
 
 
-#endif
+#endif /* _INTERNAL_HEADER */

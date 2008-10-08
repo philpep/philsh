@@ -3,6 +3,8 @@
  * philsh is under BSD licence, see LICENCE file for more informations.
  *
  */ 
+#define _GNU_SOURCE /* for get_current_dir_name() definition */
+#define _BSD_SOURCE /* for setenv() definition */
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>

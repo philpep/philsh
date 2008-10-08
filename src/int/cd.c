@@ -3,6 +3,7 @@
  * philsh is under BSD licence, see LICENCE file for more informations.
  *
  */ 
+#define _BSD_SOURCE /* for setenv() definition */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
