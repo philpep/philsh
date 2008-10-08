@@ -33,8 +33,11 @@ int exec_file_instruction(file_instruction *liste)
    {
       if(!strcmp(liste->argv[0], p_builtin->name)&&p_builtin->process == SAME_PROCESS)
       {
-	 p_builtin->p(liste->argc, liste->argv);
-	 return exec_file_instruction(liste->next);
+	 ret = p_builtin->p(liste->argc, liste->argv);
+	 if (liste->next != NULL)
+	    	 return exec_file_instruction(liste->next);
+	 else
+	    return ret;
       }
       p_builtin++;
    }
