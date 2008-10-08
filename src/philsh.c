@@ -173,7 +173,7 @@ int main (int argc, char **argv)
 	 add_history(saisie);
       /* ret = exec_saisie(saisie); */
       liste_instruction = creat_liste_instruction(saisie);
-      exec_file_instruction(liste_instruction);
+      ret = exec_file_instruction(liste_instruction);
 #ifdef DEBUG
       afficher_liste_instruction(liste_instruction);
 #endif

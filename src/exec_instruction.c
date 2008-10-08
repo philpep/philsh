@@ -117,6 +117,8 @@ int exec_file_instruction(file_instruction *liste)
       }
       if(liste->next != NULL)
 	 return exec_file_instruction(liste->next);
+      else
+	 return ret;
    }
    return 0;
 }
