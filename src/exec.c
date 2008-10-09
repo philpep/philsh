@@ -23,20 +23,26 @@
 
 struct lljobs *liste_jobs = NULL;
 
-extern alias_ll *liste_alias;
-
 /* {{{ exec_file_instruction() */
+/* LA fonction d'execution de philsh,
+ * elle prend en paramêtre une file d'instruction
+ * (structure définie dans file_instruction.h)
+ * elle retourne la valeur de retour de la dernière
+ * instruction */
 int exec_file(file_instruction *liste)
 {
-   char *p;
+   char *p, *path;
    pid_t pid;
    int bg = 0, fd, ret;
-   extern char *chemin;
    const struct builtin *p_builtin;
    extern const struct builtin builtin_command[];
    extern lljobs *liste_jobs;
+   /* On ne sais jamais */
    if(liste == NULL)
       return 0;
+   /* On teste si la commande est une builtin
+    * a lancer dans le même processus.
+    * Typiquement cd */
    p_builtin = builtin_command;
    while(p_builtin->name != NULL)
    {
@@ -50,8 +56,11 @@ int exec_file(file_instruction *liste)
       }
       p_builtin++;
    }
-   if(liste == NULL)
-      return -1;
+   /* *p est le dernier caractère du dernier argument de la liste
+    * On veut voir si *p == &, pour savoir s'il faut lancer la commande
+    * en background...
+    * TODO : Pourquoi ne pas l'intergrer dans liste->red_type ?
+    */
    p = &liste->argv[liste->argc-1][strlen(liste->argv[liste->argc-1])-1];
    if(*p == '&')
    {
@@ -65,6 +74,7 @@ int exec_file(file_instruction *liste)
       else
 	 *p = '\0';
    }
+   /* Duplication du processus */
    pid = fork();
    if(pid == 0)
    {
@@ -77,6 +87,9 @@ int exec_file(file_instruction *liste)
 	 dup2(fd, 0);
 	 signal(SIGINT, SIG_IGN);
       }
+      /* Tests de redirections
+       * TODO : meilleur affichage des érreurs possibles
+       */
       if(liste->red_type == RED_CREAT)
       {
 	 fd = creat(liste->file, S_IRWXU);
@@ -99,7 +112,10 @@ int exec_file(file_instruction *liste)
 	 close(1);
 	 dup (fd);
       }
-      /* On recupère le builtin restantes */
+      /* On recupère le builtin restantes,
+       * C'est a dire celles qui ne sont pas SAME_PROCESS
+       * (cf debut de la fonction)
+       */
       p_builtin = builtin_command;
       while(p_builtin->name != NULL)
       {
@@ -107,37 +123,51 @@ int exec_file(file_instruction *liste)
 	    exit (p_builtin->p(liste->argc, liste->argv));
 	 p_builtin++;
       }
-      if(which_cmd (liste->argv[0]) != 0)
+      /* Sinon, on cherche le chemin vers le premier argument de la liste dans $PATH
+       * S'il n'y est pas, on renvoie 127 et s'il y est on remplace le processus
+       * courant avec execv (cf man 3 exec) */
+      if(NULL == (path = which_cmd (liste->argv[0])))
 	 fprintf(stderr,"Philsh: command not found : %s\n", liste->argv[0]);
       else
-	 execv(chemin, liste->argv);
+	 execv(path, liste->argv);
       exit(127);
    }
    else if(pid != -1)
    {
+      /* Processus père, il se charge de gérer la liste des
+       * jobs, execute la prochaine instruction
+       * ou retourne la valeur de retour
+       * TODO : Lire man signal :) */
       if(!bg)
       {
 	 signal(SIGINT, SIG_IGN);
-	 while(!WaitForChild(pid, &ret));
+	 while(!WaitForChild(pid, &ret)); /*  cf un peu plus bas */
 	 signal(SIGINT, HandleInterrupt);
       }
       else
       {
-	 /* On l'ajoute à la liste des jobs */
+	 /* On l'ajoute à la liste des jobs, et on affiche un joli message */
 	 liste_jobs = add_job(liste_jobs, liste->argv[0], pid);
 	 printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, liste->argv[0]);
       }
+      /* S'il reste des instructions, on les executes sinon on
+       * renvoie la valeur de retour */
       if(liste->next != NULL)
 	 return exec_file(liste->next);
       else
 	 return ret;
    }
+   /* Le programme n'est jamais censé arriver jusque là, cela signifirais
+    * que pid == -1, donc une grosse érreur fatale, du coup on quitte
+    * brutalement, le return 0 c'est juste pour eviter les érreurs de gcc :) */
+   abort();
    return 0;
 }
 
 /* }}} */
 
 /* {{{ builtin exit && jobs && help */
+/* Affiche simplement l'aide */
 int help(int argc, char **argv)
 {
    if(argc != 1)
@@ -149,6 +179,7 @@ int help(int argc, char **argv)
    return 0;
 }
 
+/* Affiche la liste des jobs en cours */
 int jobs(int argc, char **argv)
 {
    if(argc != 1)
@@ -160,10 +191,11 @@ int jobs(int argc, char **argv)
    return 0;
 }
 
-
+/* La fonction pour quitter philsh */
 int exit_philsh(int argc, char **argv)
 {
    int ret = 0,i;
+   extern alias_ll *liste_alias;
    if(argc > 2)
    {
       fprintf(stderr,"Philsh : Usage: exit [EXIT_CODE]");
@@ -189,7 +221,7 @@ int exit_philsh(int argc, char **argv)
 /* }}} */
 
 /* {{{ WaitForChild() && HandleInterrupt() */
-/* Cette fonction attend un changement d'état d'un
+/* Cette fonction attend un changement d'état d'un des
  * processus fils.
  * Si le fils est terminé, on stoque sa valeur
  * de retour dans ret...
@@ -251,6 +283,8 @@ void HandleInterrupt(int sig)
 /* }}} */
 
 /* {{{ jobs functions */
+/* Ce sont des fonction de modifications de listes chainées
+ * toutes simples */
 lljobs *add_job(lljobs *liste, char *name, pid_t pid)
 {
    struct lljobs *new = malloc(sizeof(lljobs));

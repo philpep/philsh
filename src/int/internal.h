@@ -8,7 +8,7 @@ int internal_cd(int argc, char **argv);
 int internal_pwd(int argc, char **argv);
 int internal_which(int argc, char **argv);
 int which(char **argv, int a, int ret);
-int which_cmd(char *str);
+char *which_cmd(char *str);
 int internal_uname(int argc, char **argv);
 int internal_setenv(char *str);
 int internal_env(int argc, char **argv);

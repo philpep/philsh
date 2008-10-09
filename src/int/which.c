@@ -17,9 +17,9 @@
 
 /* Cette fonction ecris le chemin de l'executable str dans chemin
  * Elle renvoie chemin ou NULL (echec) */
-int which_cmd(char *str)
+char *which_cmd(char *str)
 {
-   extern char *chemin;
+   char *chemin;
    /* On copie le PATH dans une variable locale
     * pour ne pas modifier le vrai PATH */
    char *contenu_path = NULL;
@@ -42,12 +42,12 @@ int which_cmd(char *str)
 	       assert(chemin != NULL);
 	       sprintf(chemin, "%s/%s", nom_dossier, str);
 	       free(contenu_path);
-	       return 0;
+	       return chemin;
 	    }
 	 if (closedir(dossier) == -1)
 	 {
 	    perror("Fermeture du repertoire");
-	    return 1;
+	    return NULL;
 	 }
       }
       nom_dossier = strtok(NULL, ":");
@@ -55,7 +55,7 @@ int which_cmd(char *str)
    /* Si on est arrivé jusqu'ici, c'est qu'on a rien trouvé */
    chemin = NULL;
    free(contenu_path);
-   return 1;
+   return NULL;
 }
 
 int internal_which(int argc, char **argv)
