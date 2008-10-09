@@ -290,6 +290,8 @@ int WaitForChild(pid_t pid, int *ret)
 
 void HandleInterrupt(int sig)
 {
+   int sig2;
+   sig2 = sig;
    printf("\n");
    /* Reinstaller la routine. */
    signal(SIGINT, HandleInterrupt);

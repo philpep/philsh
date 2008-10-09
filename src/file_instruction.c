@@ -36,7 +36,7 @@ file_instruction *creat_liste_instruction(char *saisie)
 	 q = ++p;
 	 continue;
       }
-      if(*p == '>'&&(gui))
+      if(*p == '>'&&(!gui))
       {
 	 *p = '\0';
 	 if(*(++p) == '>')
