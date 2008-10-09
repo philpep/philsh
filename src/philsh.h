@@ -2,7 +2,6 @@
 #define _PHILSH_HEADERS
 
 int options_philsh(int argc, char **argv);
-int exec_saisie(char *saisie);
 void afficher_aide(void);
 void init_env(void);
 

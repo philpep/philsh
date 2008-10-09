@@ -20,12 +20,11 @@
 
 #include "philsh.h"
 #include "philsh_build.h"
-#include "exec.h"
 #include "prompt.h"
 #include "int/internal.h"
 #include "int/alias.h"
 #include "readconfig.h"
 #include "file_instruction.h"
-#include "exec_instruction.h"
+#include "exec.h"
 
 #endif /* _HEADER */

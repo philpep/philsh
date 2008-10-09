@@ -11,7 +11,6 @@
 #include <assert.h>
 #include <errno.h>
 #include "internal.h"
-#include "../exec.h"
 
 /* Cette fonction doit absolument recevoir une chaine du type
  * VAR=VALEUR */
@@ -30,7 +29,7 @@ int internal_setenv(char *str)
 /* TODO : c'est une ébauche */
 int internal_env(int argc, char **argv)
 {
-   if (argc < 2)
+   if (argc < 2&&argv[argc] == NULL)
    {
       extern char **environ;
       int i = 0;
@@ -49,6 +48,7 @@ int internal_env(int argc, char **argv)
       }
       return 0;
    }
-   return exec_cmd_external(argv+1);
+   else
+      return fprintf(stderr,"Philsh: La builtin env est en cours de developpement, si vous voulez utiliser des fonction avancées de env, utilisez _env\n");
 }
 

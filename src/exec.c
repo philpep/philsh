@@ -14,17 +14,129 @@
 #include <sys/wait.h>
 #include <sys/stat.h> /* for open() */
 #include <sys/time.h> /* for fexecve */
-#include "exec.h"
+#include "file_instruction.h"
 #include "int/internal.h"
 #include "philsh.h" /* Pour options_philsh() */
 #include "int/alias.h" /* Pour alias() unalias() */
 #include "readconfig.h" /* Pour source() */
+#include "exec.h"
 
-extern char *chemin;
 struct lljobs *liste_jobs = NULL;
 
-extern const struct builtin builtin_command[];
 extern alias_ll *liste_alias;
+
+/* {{{ exec_file_instruction() */
+int exec_file(file_instruction *liste)
+{
+   char *p;
+   pid_t pid;
+   int bg = 0, fd, ret;
+   extern char *chemin;
+   const struct builtin *p_builtin;
+   extern const struct builtin builtin_command[];
+   extern lljobs *liste_jobs;
+   if(liste == NULL)
+      return 0;
+   p_builtin = builtin_command;
+   while(p_builtin->name != NULL)
+   {
+      if(!strcmp(liste->argv[0], p_builtin->name)&&p_builtin->process == SAME_PROCESS)
+      {
+	 ret = p_builtin->p(liste->argc, liste->argv);
+	 if (liste->next != NULL)
+	    	 return exec_file(liste->next);
+	 else
+	    return ret;
+      }
+      p_builtin++;
+   }
+   if(liste == NULL)
+      return -1;
+   p = &liste->argv[liste->argc-1][strlen(liste->argv[liste->argc-1])-1];
+   if(*p == '&')
+   {
+      bg = 1;
+      /* machin & != machin& */
+      if(p == liste->argv[liste->argc-1])
+      {
+	 liste->argc--; /* TODO : fuite memoire ici ? */
+	 liste->argv[liste->argc] = NULL;
+      }
+      else
+	 *p = '\0';
+   }
+   pid = fork();
+   if(pid == 0)
+   {
+      /* FILS */
+      if(bg)
+      {
+	 fd = open("/dev/null", O_RDONLY);
+	 if(fd == -1)
+	    exit(1);
+	 dup2(fd, 0);
+	 signal(SIGINT, SIG_IGN);
+      }
+      if(liste->red_type == RED_CREAT)
+      {
+	 fd = creat(liste->file, S_IRWXU);
+	 if(fd == -1)
+	 {
+	    fprintf(stderr, "Philsh: Impossible d'ouvrir le fichier %s\n", liste->file);
+	    exit(1);
+	 }
+	 close(1);
+	 dup(fd);
+      }
+      else if (liste->red_type == RED_ADD)
+      {
+	 fd = open(liste->file, O_WRONLY | O_CREAT | O_APPEND, 0666);
+	 if(fd == -1)
+	 {
+	    fprintf(stderr, "Philsh: Impossible d'ouvrir le fichier %s\n", liste->file);
+	    exit(1);
+	 }
+	 close(1);
+	 dup (fd);
+      }
+      /* On recupère le builtin restantes */
+      p_builtin = builtin_command;
+      while(p_builtin->name != NULL)
+      {
+	 if(!strcmp(liste->argv[0], p_builtin->name))
+	    exit (p_builtin->p(liste->argc, liste->argv));
+	 p_builtin++;
+      }
+      if(which_cmd (liste->argv[0]) != 0)
+	 fprintf(stderr,"Philsh: command not found : %s\n", liste->argv[0]);
+      else
+	 execv(chemin, liste->argv);
+      exit(127);
+   }
+   else if(pid != -1)
+   {
+      if(!bg)
+      {
+	 signal(SIGINT, SIG_IGN);
+	 while(!WaitForChild(pid, &ret));
+	 signal(SIGINT, HandleInterrupt);
+      }
+      else
+      {
+	 /* On l'ajoute à la liste des jobs */
+	 liste_jobs = add_job(liste_jobs, liste->argv[0], pid);
+	 printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, liste->argv[0]);
+      }
+      if(liste->next != NULL)
+	 return exec_file(liste->next);
+      else
+	 return ret;
+   }
+   return 0;
+}
+
+/* }}} */
+
 /* {{{ builtin exit && jobs && help */
 int help(int argc, char **argv)
 {
@@ -73,166 +185,6 @@ int exit_philsh(int argc, char **argv)
       free(argv[i]);
    free(argv);
    exit(ret);
-}
-/* }}} */
-
-/* {{{ exec_cmd_external() */
-int exec_cmd_external(char **argv)
-{
-   pid_t pid;
-   pid = fork();
-   switch (errno)
-   {
-      case EAGAIN:
-	 perror("philsh: cannot allocate sufficient memory to create fork\n");
-	 exit(EAGAIN);
-	 break;
-      case ENOMEM:
-	 perror("philsh: failed to allocate the necessary kernel Structure\n");
-	 exit(ENOMEM);
-	 break;
-   }
-   if (pid == 0)
-   {
-      if (which_cmd(argv[0]) != 0)
-      {
-	 fprintf(stderr, "philsh: command not found : %s\n", argv[0]);
-	 exit(1);
-      }
-      return execv(chemin, argv);
-   }
-   else if (pid != -1)
-      wait(NULL);
-   else if (pid == -1)
-      return -1;
-   return -1;
-}
-/* }}} */
-
-/* {{{ exec_cmd() */
-/* LA fonction d'execution de philsh
- * TODO : simplifier, c'est un bordel
- * monstrueux !
- * Cette fonction renvoie le code de sortie
- * de l'application lancée (par un moyen on ne
- * peut plus douteux :)
- */
-int exec_cmd(int argc, char **argv)
-{
-   int bg = 0, err, ret, file, null;
-   char *p, *chemin_cmd_locale = NULL;
-   extern alias_ll *liste_alias;
-   pid_t pid;
-   const struct builtin *p_builtin;
-   extern char **environ;
-   p_builtin = builtin_command;
-   while(p_builtin->name != NULL)
-   {
-      if((!strcmp(argv[0], p_builtin->name))&&(p_builtin->process == SAME_PROCESS))
-	 return p_builtin->p(argc, argv);
-      p_builtin++;
-   }
-   /* bg = 1 : commande en backgroud */
-   p = &argv[argc-1][strlen(argv[argc-1])-1];
-   if(*p == '&')
-   {
-      bg = 1;
-      /* Il faut distinguer
-       * truc machin& et
-       * truc machin &
-       */
-      if (p == argv[argc-1])
-      {
-	 argc--;
-	 argv[argc] = NULL;
-      }
-      else
-	 *p = '\0';
-   }
-   if (strchr(argv[0], '='))
-      return internal_setenv(argv[0]);
-   /* On crée le fork */
-   pid = fork();
-   err = errno;
-   if (pid == 0)
-   {
-      /* Pocessus fils, si la commande est interne à philsh
-       * elle est executé
-       * si la commande est externe, elle est executé
-       * par execvp. */
-      /* S'il faut lancer en backgroud */
-      if(bg)
-      {
-	 null = open("/dev/null", O_RDONLY);
-	 if (null == -1)
-	    exit(1);
-	 dup2(null, 0);
-	 signal(SIGINT, SIG_IGN);
-      }
-      p_builtin = builtin_command;
-      while(p_builtin->name != NULL)
-      {
-	 if(!strcmp(argv[0], p_builtin->name))
-	    exit (p_builtin->p(argc, argv));
-	 p_builtin++;
-      }
-      /* Si on à affaire à un ./  */
-      if ( (argv[0][0] == '.')&&(argv[0][1] == '/') )
-      {
-	 chemin = get_current_dir();
-	 chemin_cmd_locale = malloc (sizeof(char) * (strlen(chemin)+strlen(argv[0])));
-	 assert(chemin_cmd_locale != NULL);
-	 sprintf(chemin_cmd_locale, "%s/%s", chemin, argv[0]+2);
-	 execv(chemin_cmd_locale, argv);
-      }
-      if (argv[0][0] == '_')
-	 argv[0]++;
-      else if (argv[0][0] == '/')
-      {
-	 file = open(argv[0], O_RDONLY, S_IXUSR | S_IXGRP);
-	 if ((errno == EACCES)||(file == -1))
-	 {
-	    fprintf(stderr, "philsh: cannot execute %s : Permission denied\n", argv[0]);
-	    exit(EACCES);
-	 }
-	 fexecve(file, argv, environ);
-      }
-      /* Si la commande est externe */
-      if (which_cmd (argv[0]) != 0)
-	 fprintf(stderr, "philsh : command not found : %s\n", argv[0]);
-      else
-	 execv(chemin, argv);
-      exit(127);
-   }
-   else if (pid != -1 && !bg)
-   {
-      /* Processus père
-       * Il attent que le processus fils
-       * se termine */
-      signal(SIGINT, SIG_IGN);
-      while(!WaitForChild(pid, &ret));
-      signal(SIGINT, HandleInterrupt);
-   }
-   else if(pid != -1 && bg)
-   {
-      /* On l'ajoute à la liste des jobs */
-      liste_jobs = add_job(liste_jobs, argv[0], pid);
-      printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, argv[0]);
-   }
-   else
-   {
-      switch (err)
-      {
-	 case EAGAIN:
-	    fprintf(stderr, "Philsh : ne peut pas allouer asser de memoire pour créer un nouveau processus fils\n");
-	    break;
-	 case ENOMEM:
-	    fprintf(stderr, "Philsh : Impossible de faire un fork(), le noyau n'a plus assez de memoire\n");
-	    break;
-      }
-      return -1;
-   }
-   return ret;
 }
 /* }}} */
 

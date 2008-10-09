@@ -18,6 +18,7 @@ typedef struct _file_instruction
 
 file_instruction *creat_liste_instruction(char *saisie);
 file_instruction *add_instruction(file_instruction *liste, char *saisie, enum _redirection_type type, char *file);
+file_instruction *Translate(int argc, char **argv);
 void free_file_instruction(file_instruction *liste);
 #ifdef DEBUG
 void afficher_liste_instruction(file_instruction *liste);

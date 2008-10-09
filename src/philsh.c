@@ -57,91 +57,6 @@ void init_env(void)
 }
 /* }}} */
 
-/* {{{ exec_saisie */
-/* Interprète saisie et l'execute */
-int exec_saisie(char *saisie)
-{
-   int i, argc, ret;
-   char **argv;
-   size_t buf_size;
-   char *p, *buffer = NULL, c;
-   extern alias_ll *liste_alias;
-   alias_ll *alias;
-   /***********/
-   alias = liste_alias;
-   p = saisie;
-   argc = compter_mots(saisie, &buf_size);
-   /* Si la saisie est vide de sens */
-   if (argc == 0)
-      return 0;
-   while (*p == ' ')
-      p++;
-   /* On regarde si le premier mot n'est pas un alias */
-   while(alias != NULL)
-   {
-      if (!strncmp(alias->name, p, strlen(alias->name)))
-      {
-	 /* c est le caractère juste apres l'alias trouvé
-	  * car il faut distinguer
-	  * ls et lsblablia */
-	 c = *(p+strlen(alias->name));
-	 if ((c != '\0')&&(c != ' '))
-	 {
-	    alias = alias->next;
-	    continue;
-	 }
-	 /* Si c'est un alias on alloue buffer */
-	 buffer = malloc(sizeof(char) * (1+strlen(alias->cmd)+strlen(p+strlen(alias->name))));
-	 sprintf(buffer, "%s%s", alias->cmd, p+strlen(alias->name));
-	 break;
-      }
-      alias = alias->next;
-   }
-   /* Si buffer n'est pas aloué, alors il n'y avait
-    * pas d'alias */
-   if(buffer == NULL)
-      buffer = saisie;
-   argc = compter_mots(buffer, &buf_size);
-   /* C'est honteux, mais en attendant le support des
-    * caractères speciaux, on utilise system()
-    * Histoire que le shell donne l'impression
-    * de bien marcher
-    * NOTE : L'idée honteuse n'est pas de moi,
-    * en lisant le code de sash (app-shell/sash sur gentoo)
-    * je me suis rendu compte qu'il utilisait system() a tout-vat,
-    * du coup je me dis pourquoi pas ? C'est bien sûr temporaire !
-    * Si la commande est alias on veut pouvoir continuer à faire
-    * alias lll="ls -l | less" par exemple, d'où la première
-    * instruction...
-    */
-   if(strncmp(buffer, "alias", 5) &&(strchr(buffer, '|')||strchr(buffer, '*')||strchr(buffer, '>')||strchr(buffer, '<')||strstr(buffer, "&&")||strchr(buffer, '`')||strchr(buffer, '$')||strchr(buffer, '\\')))
-   {
-      i = system(buffer);
-      if (buffer != saisie)
-	 free(buffer);
-      return i;
-   }
-   argv = malloc (sizeof(char *) * (argc+1));
-   argc = parse_saisie(buffer, buf_size, argv);
-   /* Si buffer contenait un alias */
-   if (buffer != saisie)
-      free(buffer);
-   argc++;
-   argv[argc] = NULL;
-   /* La fonction qui execute vraiment la commande
-    * avec (ou sans) fork() */
-   ret = exec_cmd(argc, argv);
-   for (i = 0; i < argc; i++)
-      free(argv[i]);
-   free(argv);
-#ifdef DEBUG
-   printf("valeur retour : %d\n", ret);
-#endif
-   return ret;
-}
-
-/* }}} */
-
 /* {{{ main() */
 /* Ici commence l'aventure */
 int main (int argc, char **argv)
@@ -173,7 +88,7 @@ int main (int argc, char **argv)
 	 add_history(saisie);
       /* ret = exec_saisie(saisie); */
       liste_instruction = creat_liste_instruction(saisie);
-      ret = exec_file_instruction(liste_instruction);
+      ret = exec_file(liste_instruction);
 #ifdef DEBUG
       afficher_liste_instruction(liste_instruction);
 #endif
@@ -187,6 +102,8 @@ int main (int argc, char **argv)
 /* {{{ options_philsh */
 int options_philsh(int argc, char **argv)
 {
+   file_instruction *cmd;
+   int ret;
    const char *optstring = "hvc";
    static struct option philsh_option[] =
    {
@@ -215,8 +132,12 @@ int options_philsh(int argc, char **argv)
       }
       else if(opt == 'c')
       {
-	 exec_cmd(argc-2, argv+2);
-	 exit(0);
+	 if(argc < 3)
+	    exit(0);
+	 cmd = Translate(argc-2, argv+2);
+	 ret = exec_file(cmd);
+	 free(cmd);
+	 exit(ret);
       }
    }
    return 0;

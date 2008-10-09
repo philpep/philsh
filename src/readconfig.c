@@ -17,6 +17,8 @@
 #include "philsh.h"
 #include "readconfig.h"
 #include "int/err.h"
+#include "file_instruction.h"
+#include "exec.h"
 
 
 typedef unsigned short ushort; 
@@ -56,6 +58,7 @@ int parse_file(char *ptr)
    char *p;
    char *str;
    size_t i = 0;
+   file_instruction *command;
    p = strchr(ptr, '\n');
    /* Si on est en fin de config */
    if(p == NULL)
@@ -73,7 +76,10 @@ int parse_file(char *ptr)
    str = malloc(sizeof(char) * (1+p-ptr));
    memcpy(str, ptr, p-ptr);
    str[p-ptr] = '\0';
-   exec_saisie(str);
+   /* On execute la ligne de config */
+   command = creat_liste_instruction(str);
+   exec_file(command);
+   free_file_instruction(command);
    free(str);
    return parse_file(p+1);
 }

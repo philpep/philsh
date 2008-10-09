@@ -282,3 +282,13 @@ int compter_mots(char *saisie, size_t *lenght)
    return words;
 }
 
+
+file_instruction *Translate(int argc, char **argv)
+{
+   file_instruction *new = malloc(sizeof(file_instruction));
+   new->argc = argc;
+   new->argv = argv;
+   new->file = NULL;
+   new->red_type = NONE;
+   return new;
+}
