@@ -90,7 +90,7 @@ int exec_file(file_instruction *liste)
       /* Tests de redirections
        * TODO : meilleur affichage des érreurs possibles
        */
-      if(liste->red_type == RED_CREAT)
+      if(liste->flags & RED_CREAT)
       {
 	 fd = creat(liste->file, S_IRWXU);
 	 if(fd == -1)
@@ -101,7 +101,7 @@ int exec_file(file_instruction *liste)
 	 close(1);
 	 dup(fd);
       }
-      else if (liste->red_type == RED_ADD)
+      else if (liste->flags & RED_ADD)
       {
 	 fd = open(liste->file, O_WRONLY | O_CREAT | O_APPEND, 0666);
 	 if(fd == -1)

@@ -64,6 +64,8 @@ int main (int argc, char **argv)
    struct passwd *user = getpwuid(uid);
    file_instruction *liste_instruction = NULL;
    int ret = 0;
+   rl_catch_signals = 0;
+   rl_set_signals();
    /* On teste les options avec lesquelles
     * philsh est appellé */
    options_philsh(argc, argv);
@@ -95,6 +97,7 @@ int main (int argc, char **argv)
    }
    return 0;
 }
+
 /* }}} */
 
 /* {{{ options_philsh */

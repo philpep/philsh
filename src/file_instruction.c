@@ -17,40 +17,25 @@
  * Elle est assez complexe, mais elle fonctionne plutôt bien */
 file_instruction *creat_liste_instruction(char *saisie)
 {
-   char *p, *q, *r; /* Des pointeurs temporaires */
-   int gui = 0; /* La variable qui permet de savoir si on est entre 2 guillemets */
-   enum _redirection_type red_type; /* cf file_instruction.h */
-   file_instruction *liste = NULL; /* La file qu'on va créer puis retourner */
-   /* Une saisie NULL est un affront à cette fonction */
+   char *p, *q, *r;
+   int gui = 0;
+   unsigned int flags;
+   file_instruction *liste = NULL;
    if(saisie == NULL)
       return NULL;
-   /* Dans un premier temps, on va separer les instructions
-    * Je vous conseille de bien voir comment est construite la structure
-    * file_instruction
-    * Exemple ls -l /tmp >/dev/null; env >> tmp;echo "prout"
-    * Se sépare en
-    * ls -l /tmp RED_CREAT---> /dev/null
-    * env RED_ADD---> tmp
-    * echo "prout"
-    * Ensuite On applique add_instruction()
-    */
-
-   /* En gros p parcoure la chaine et q est le debut de la sous chaine
-    * que l'on veut extraire */
    q = saisie;
    for(p = saisie; *p != '\0'; p++)
    {
       if(*p == '"'||*p == '\'')
       {
-	 gui = (gui) ? 0 : 1; /* Permet de passer gui a 0 s'il vaut 1 et inversement */
+	 gui = (gui) ? 0 : 1;
 	 continue;
       }
-      if(*p == ';'&&p != q)
+      if(*p == ';'&&p != q&&!gui)
       {
-	 /* Un ; veut dire nouvelle instruction, on a pas trouvé de > avant
-	  * donc il n'y a pas de redirections */
 	 *p = '\0';
-	 liste = add_instruction(liste, q, NONE, NULL);
+	 flags = NORED | NOPIPE | NOCOND;
+	 liste = add_instruction(liste, q, NULL, flags);
 	 q = ++p;
 	 continue;
       }
@@ -60,39 +45,71 @@ file_instruction *creat_liste_instruction(char *saisie)
 	 if(*(++p) == '>')
 	 {
 	    p++;
-	    red_type = RED_ADD; /* Redirection >> */
+	    flags = RED_ADD | NOPIPE | NOCOND;
 	 }
 	 else
-	    red_type = RED_CREAT; /* Redirection > */
-	 /* Là ça devient vraiment complexe, car il faut extraire le nom du fichier
-	  * dans lequel on veut rediriger. Mais il faut pourvoir faire tous les cas
-	  * possibles    >fichier ou >       fichier     ;
-	  * Bref, faut bien gérer les espaces... */
+	    flags = RED_CREAT | NOPIPE | NOCOND;
 	 while(*p == ' ')
 	    p++;
 	 r = p;
-	 while(*r != '\0'&&*r != ' '&&*r != ';')
+	 while(*r != '\0'&&*r != ' '&&*r != ';'&&*r != '|')
 	    r++;
-	 /* si r est la fin de saisie ---> ++r n'a plus de sens :/ */
 	 if(*r == '\0')
-	    return liste = add_instruction(liste, q, red_type, p);
+	    return liste = add_instruction(liste, q, p, flags);
+	 if(*r == '|')
+	 {
+	    flags &= ~NOPIPE;
+	    flags |= PIPE;
+	 }
 	 *r = '\0';
-	 liste = add_instruction(liste, q, red_type, p);
+	 r++;
+	 while(*r == ' ')
+	    r++;
+	 if(*r == '|')
+	 {
+	    if(*(r+1) == '|')
+	    {
+	       flags &= ~NOCOND;
+	       flags |= OR;
+	       r++;
+	    }
+	    else
+	    {
+	       flags &= ~NOPIPE;
+	       flags |= PIPE;
+	    }
+	 }
+	 liste = add_instruction(liste, q, p, flags);
 	 p = ++r;
 	 while(*p == ' '||*p == ';')
 	    p++;
 	 q = p;
 	 continue;
       }
+      if(*p == '|'&&(!gui))
+      {
+	 *p = '\0';
+	 if(*(++p) == '|')
+	 {
+	    p++;
+	    flags = NORED | NOPIPE | OR;
+	 }
+	 else
+	    flags = NORED | PIPE | NOCOND;
+	 liste = add_instruction(liste, q, NULL, flags);
+	 while(*p == ' ')
+	    p++;
+	 q = p;
+	 continue;
+      }
    }
-   /* Ajoute la dernière instruction */
-   liste = add_instruction(liste, q, NONE, NULL);
+   liste = add_instruction(liste, q, NULL, NOPIPE | NORED | NOCOND);
    return liste;
 }
 
 /* Remplis une instruction et la colle en bout de file, c'est
  * ici qu'on affecte l'alias s'il existe */
-file_instruction *add_instruction(file_instruction *liste, char *saisie, enum _redirection_type type, char *file)
+file_instruction *add_instruction(file_instruction *liste, char *saisie, char *file, unsigned int flags)
 {
    int argc;
    size_t buf_size;
@@ -105,7 +122,7 @@ file_instruction *add_instruction(file_instruction *liste, char *saisie, enum _r
    if(argc == 0)
       return liste;
    new = malloc(sizeof(file_instruction));
-   new->red_type = type;
+   new->flags = flags;
    new->next = NULL;
    /************/
    if(file != NULL)
@@ -187,7 +204,7 @@ file_instruction *Translate(int argc, char **argv)
    new->argc = argc;
    new->argv = argv;
    new->file = NULL;
-   new->red_type = NONE;
+   new->flags = NORED | NOPIPE | NOCOND;
    return new;
 }
 
@@ -202,22 +219,23 @@ void afficher_liste_instruction(file_instruction *liste)
       printf("Instruction %d :\n", i++);
       for(j = 0; j < p->argc; j++)
 	 printf("\t\targv[%d] = '%s'\n", j, p->argv[j]);
-      printf("Redirection : ");
-      switch(p->red_type)
-      {
-	 case NONE:
-	    printf("NONE");
-	    break;
-	 case RED_ADD:
-	    printf("RED_ADD >> %s'", p->file);
-	    break;
-	 case RED_CREAT:
-	    printf("RED_CREAT > %s'", p->file);
-	    break;
-	 default:
-	    printf("ERREUR !!!");
-	    break;
-      }
+      printf("Redirection = ");
+      if(p->flags & RED_ADD)
+	 printf("RED_ADD >> '%s' ", p->file);
+      if(p->flags & RED_CREAT)
+	 printf("RED_CREAT > '%s' ", p->file);
+      if(p->flags & NORED)
+	 printf("NORED ");
+      if(p->flags & PIPE)
+	 printf("PIPE ");
+      if(p->flags & NOPIPE)
+	 printf("NOPIPE ");
+      if(p->flags & AND)
+	 printf("AND ");
+      if(p->flags & OR)
+	 printf("OR ");
+      if(p->flags & NOCOND)
+	 printf("NOCOND ");
       printf("\n");
       p = p->next;
    }
