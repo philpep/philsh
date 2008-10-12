@@ -31,9 +31,9 @@ struct lljobs *liste_jobs = NULL;
  * instruction */
 int exec_file(file_instruction *liste)
 {
-   char *p, *path;
+   char *ptr, *path;
    pid_t pid;
-   int bg = 0, fd, ret;
+   int bg = 0, fd, ret, p[2], status;
    const struct builtin *p_builtin;
    extern const struct builtin builtin_command[];
    extern lljobs *liste_jobs;
@@ -61,20 +61,22 @@ int exec_file(file_instruction *liste)
     * en background...
     * TODO : Pourquoi ne pas l'intergrer dans liste->red_type ?
     */
-   p = &liste->argv[liste->argc-1][strlen(liste->argv[liste->argc-1])-1];
-   if(*p == '&')
+   ptr = &liste->argv[liste->argc-1][strlen(liste->argv[liste->argc-1])-1];
+   if(*ptr == '&')
    {
       bg = 1;
       /* machin & != machin& */
-      if(p == liste->argv[liste->argc-1])
+      if(ptr == liste->argv[liste->argc-1])
       {
 	 liste->argc--; /* TODO : fuite memoire ici ? */
 	 liste->argv[liste->argc] = NULL;
       }
       else
-	 *p = '\0';
+	 *ptr = '\0';
    }
    /* Duplication du processus */
+   if(-1 == pipe(p))
+      perror("pipe()");
    pid = fork();
    if(pid == 0)
    {
@@ -111,6 +113,12 @@ int exec_file(file_instruction *liste)
 	 }
 	 close(1);
 	 dup (fd);
+      }
+      if(liste->flags & PIPE)
+      {
+	 close(p[0]);
+	 close(1);
+	 dup(p[1]);
       }
       /* On recupère le builtin restantes,
        * C'est a dire celles qui ne sont pas SAME_PROCESS
@@ -150,6 +158,13 @@ int exec_file(file_instruction *liste)
 	 liste_jobs = add_job(liste_jobs, liste->argv[0], pid);
 	 printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, liste->argv[0]);
       }
+      if(liste->flags & PIPE)
+      {
+	 waitpid(pid, &status, WNOHANG);
+	 close(p[1]);
+	 close(0);
+	 dup(p[0]);
+      }
       /* S'il reste des instructions, on les executes sinon on
        * renvoie la valeur de retour */
       if(liste->next != NULL)
@@ -157,6 +172,8 @@ int exec_file(file_instruction *liste)
       else
 	 return ret;
    }
+   else
+      perror("fork()");
    /* Le programme n'est jamais censé arriver jusque là, cela signifirais
     * que pid == -1, donc une grosse érreur fatale, du coup on quitte
     * brutalement, le return 0 c'est juste pour eviter les érreurs de gcc :) */

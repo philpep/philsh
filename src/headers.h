@@ -14,8 +14,6 @@
 #include <sys/wait.h>
 #include <sys/utsname.h>
 #include <assert.h>
-#include <readline/readline.h>
-#include <readline/history.h>
 #include <getopt.h>
 
 #include "philsh.h"

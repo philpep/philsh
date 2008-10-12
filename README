@@ -8,20 +8,9 @@
 #=====================================#
 #
 # Auteur Philippe Pepiot <philippe.pepiot@gmail.com>
-# Ce code est trop misérable pour être soumis à une licence
-# Donc faites en ce que vous voulez, mais sachez que <readline.h> est
-# sous GPL.
+# Le code est sous LICENCE BSD
 #
 # Philsh est un interpreteur de commande minimaliste
-# - Il est juste capable de lancer une commande simple
-#   sans redirection ou autres pipes. (mais peut être bientôt il
-#   pourra le faire \o/ )
-# - NOUVEAU : philsh est capable d'executer des
-#   commandes en arrière plan, pour cela
-#   il suffit de faire comme d'habitude avec
-#   le signe & à la fin de votre saisie.
-# - Il comporte quelques commandes internes comme
-#   cd, pwd, which, env et d'autres (philsh --help)
 # - Il à pour unique but de m'apprendre à programmer
 #   en C et à me servir de svn, de vim, des Makefiles etc.
 # - Si vous lisez ce code, sachez que je n'ai jamais suivis
@@ -29,22 +18,22 @@
 #   jamais), donc si vous voyez une érreur, ou un defaut dans
 #   mes fonction, ou si vous avez un conseil surtout n'hésitez pas à vous 
 #   faire prof et à m'envoyer un mail.
-#   - NOUVEAU : pour ne pas executer une built-in commande, mettez
+#   - Pour ne pas executer une built-in commande, mettez
 #    '_' avant la commande. Par exemple pour executer /bin/which
-#    faites _which
+#    faites _which (Plus utilisé temporairement)
 #   
 #   DEPENDANCE :
-#   - readline, ou libreadline
 #   - CMake >= 2.6
 #
 #   UTILISATION :
-#   - cd philsh
-#   - cmake .
+#   - mkdir philsh/build && cd philsh/build
+#   - cmake ..
 #   - make
 #   - sudo make install si vous souhaitez l'installer
 #   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
 #   - lancez le via ./philsh (dans un vrai shell :)
-#   - N'oubliez pas de copier philshrc dans ~/.philshrc
+#   - N'oubliez pas de lire le man, puis philsh --help vous donnera quelques infos utiles
+#     Enfin, jetez un coup d'oeil à philshrc.example
 #
 #
 #===========================#
@@ -59,7 +48,8 @@
 # - faites un cd lien_symbolique puis un cd ..
 # - Executez philsh sur un petit terminal
 # - Faites un ctrl-z sur un processus fils...
-# - ctrl-D ---> segfault
+# - ctrl-D ---> Prompt infini....
+# - ctrl-C --->Ne me quitte pas
 #
 #
 #===========#

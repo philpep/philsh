@@ -59,13 +59,11 @@ void init_env(void)
 /* Ici commence l'aventure */
 int main (int argc, char **argv)
 {
-   char *config_file, *saisie = NULL, *prompt;
+   char *config_file, saisie[50], *prompt;
    uid_t uid = getuid();
    struct passwd *user = getpwuid(uid);
    file_instruction *liste_instruction = NULL;
-   int ret = 0;
-   rl_catch_signals = 0;
-   rl_set_signals();
+   int ret = 0, fd_stdin, fd_stdout;
    /* On teste les options avec lesquelles
     * philsh est appellé */
    options_philsh(argc, argv);
@@ -81,19 +79,26 @@ int main (int argc, char **argv)
    for (;;)
    {
       prompt = set_prompt(ret);
-      /* La fonction readline est magique */
-      saisie = readline(prompt);
-      free(prompt);
-      if (saisie && *saisie)
-	 add_history(saisie);
-      /* ret = exec_saisie(saisie); */
+      printf("%s", prompt);
+      fflush(stdin);
+      fgets(saisie, 50, stdin);
+      fflush(stdin);
+      fd_stdout = dup(1);
+      fd_stdin = dup(0);
+      /* ici config_file n'a rien a voir avec son nom */
+      config_file = strchr(saisie, '\n');
+      *config_file = '\0';
       liste_instruction = creat_liste_instruction(saisie);
       ret = exec_file(liste_instruction);
 #ifdef DEBUG
       afficher_liste_instruction(liste_instruction);
 #endif
+      close(1);
+      dup(fd_stdout);
+      close(0);
+      dup(fd_stdin);
       free_file_instruction(liste_instruction);
-      free(saisie);
+      /* free(saisie); */
    }
    return 0;
 }
@@ -135,9 +140,12 @@ int options_philsh(int argc, char **argv)
       {
 	 if(argc < 3)
 	    exit(0);
-	 cmd = Translate(argc-2, argv+2);
-	 ret = exec_file(cmd);
-	 free(cmd);
+      cmd = creat_liste_instruction(argv[2]);
+      ret = exec_file(cmd);
+#ifdef DEBUG
+      afficher_liste_instruction(cmd);
+#endif
+      free_file_instruction(cmd);
 	 exit(ret);
       }
    }

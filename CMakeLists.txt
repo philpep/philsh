@@ -42,7 +42,7 @@ macro(a_find_program var prg req)
     if(NOT ${var})
         message(STATUS "${prg} not found.")
         if(required)
-            message(FATAL_ERROR "${prg} is required to build wmfs")
+            message(FATAL_ERROR "${prg} is required to build philsh")
         endif()
     else()
         message(STATUS "${prg} -> ${${var}}")
@@ -69,8 +69,7 @@ set(BUILTIN "which, cd, whoami, env et uname")
 set(CFLAGS "-W -Wall -ansi -ggdb -fomit-frame-pointer")
 set(CMAKE_C_FLAGS ${CFLAGS})
 # Link Libraries
-set(LIBRARIES_TO_LINK 
-  readline)
+set(LIBRARIES_TO_LINK)
 #  confuse)
 target_link_libraries(philsh ${LIBRARIES_TO_LINK})
 # replace strings in configs

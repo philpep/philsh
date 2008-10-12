@@ -195,19 +195,6 @@ void free_file_instruction(file_instruction *liste)
    return;
 }
 
-/* Fonction de traduction d'argc, argv en une liste d'instruction
- * (avec une seule entrée donc), pour l'instant elle est utilisée seulement
- * une fois, mais elle pourrait être utile par la suite */
-file_instruction *Translate(int argc, char **argv)
-{
-   file_instruction *new = malloc(sizeof(file_instruction));
-   new->argc = argc;
-   new->argv = argv;
-   new->file = NULL;
-   new->flags = NORED | NOPIPE | NOCOND;
-   return new;
-}
-
 #ifdef DEBUG
 void afficher_liste_instruction(file_instruction *liste)
 {
