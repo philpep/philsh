@@ -296,6 +296,7 @@ void HandleInterrupt(int sig)
    printf("\n");
    /* Reinstaller la routine. */
    signal(SIGINT, HandleInterrupt);
+   philsh();
 }
 /* }}} */
 

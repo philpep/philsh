@@ -4,5 +4,6 @@
 int options_philsh(int argc, char **argv);
 void afficher_aide(void);
 void init_env(void);
+void philsh(void);
 
 #endif /* _PHILSH_HEADER */

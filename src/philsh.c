@@ -55,15 +55,43 @@ void init_env(void)
 }
 /* }}} */
 
+void philsh(void)
+{
+   int fd_stdin, fd_stdout, ret = 0;
+   char *p, *prompt, saisie[256];
+   file_instruction *liste_instruction = NULL;
+   for(;;)
+   {
+      prompt = set_prompt(ret);
+      printf("%s", prompt);
+      fflush(stdin);
+      fgets(saisie, 256, stdin);
+      fflush(stdin);
+      fd_stdout = dup(1);
+      fd_stdin = dup(0);
+      p = strchr(saisie, '\n');
+      *p = '\0';
+      liste_instruction = creat_liste_instruction(saisie);
+      ret = exec_file(liste_instruction);
+#ifdef DEBUG
+      afficher_liste_instruction(liste_instruction);
+#endif
+      close(1);
+      dup(fd_stdout);
+      close(0);
+      dup(fd_stdin);
+      free_file_instruction(liste_instruction);
+   }
+   return;
+}
+
 /* {{{ main() */
 /* Ici commence l'aventure */
 int main (int argc, char **argv)
 {
-   char *config_file, saisie[50], *prompt;
+   char *config_file;
    uid_t uid = getuid();
    struct passwd *user = getpwuid(uid);
-   file_instruction *liste_instruction = NULL;
-   int ret = 0, fd_stdin, fd_stdout;
    /* On teste les options avec lesquelles
     * philsh est appellé */
    options_philsh(argc, argv);
@@ -75,31 +103,7 @@ int main (int argc, char **argv)
    sprintf(config_file, "%s/%s", user->pw_dir, ".philshrc");
    init_config(config_file);
    free(config_file);
-   /* La super boucle du phil shell */
-   for (;;)
-   {
-      prompt = set_prompt(ret);
-      printf("%s", prompt);
-      fflush(stdin);
-      fgets(saisie, 50, stdin);
-      fflush(stdin);
-      fd_stdout = dup(1);
-      fd_stdin = dup(0);
-      /* ici config_file n'a rien a voir avec son nom */
-      config_file = strchr(saisie, '\n');
-      *config_file = '\0';
-      liste_instruction = creat_liste_instruction(saisie);
-      ret = exec_file(liste_instruction);
-#ifdef DEBUG
-      afficher_liste_instruction(liste_instruction);
-#endif
-      close(1);
-      dup(fd_stdout);
-      close(0);
-      dup(fd_stdin);
-      free_file_instruction(liste_instruction);
-      /* free(saisie); */
-   }
+   philsh();
    return 0;
 }
 
@@ -140,12 +144,12 @@ int options_philsh(int argc, char **argv)
       {
 	 if(argc < 3)
 	    exit(0);
-      cmd = creat_liste_instruction(argv[2]);
-      ret = exec_file(cmd);
+	 cmd = creat_liste_instruction(argv[2]);
+	 ret = exec_file(cmd);
 #ifdef DEBUG
-      afficher_liste_instruction(cmd);
+	 afficher_liste_instruction(cmd);
 #endif
-      free_file_instruction(cmd);
+	 free_file_instruction(cmd);
 	 exit(ret);
       }
    }
@@ -188,4 +192,4 @@ void afficher_aide(void)
 
 /* }}} */
 /* vim:fdm=marker:
- */
+*/
