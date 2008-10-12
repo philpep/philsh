@@ -70,11 +70,6 @@ Here is somes Known bugs.
 
 *Builtin cd and pwd command*, 'src/int/cd.c' & 'src/int/pwd.c'::
  Theses functions don't support symbolics links.
-*Problem with signal*, '????'::
- - A EOF (Ctrl-D) cause a segmentation fault in philsh.
- - The suspend command (Ctrl-Z), don't work.
-*Problem with readline*, 'src/philsh.c'::
- - A big command cause a prompt error with readline.
 
 
 AUTHORS

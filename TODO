@@ -1,36 +1,18 @@
 rhaamo :
   · CMAKE
     · Generation changelog ?
-  · GENTOO/EBUILD
-    · Commencer d'ecrire un ebuild 'live' ?
   · Code
     · Remanier l'aide.
 
 philpep :
   . Gestion des signaux !
+  . Meilleure prise de saisie --> ncurses.h
   . Prompt modifiable.
   . A l'installation, il faut patcher /etc/shells pour y mettre philsh
         man 5 shells
 	man 3 getusershell
-  . Ordre de prioritées pour virer system()
+  . Ordre de prioritées pour une bonne interpretation de la commande
      - Gestion du '$'
-     - Gestion du ';' ---> pourquoi pas une liste chainée des commandes à executer ?
-                Genre struct cmd_list
-		{
-		   int argc;
-		   char **argv;
-		   struct cmd_list *next;
-		}; /**/
-		Ou un tableau ? --> peut être un peu violent pour la memoire ?
-
-     - Gestion des redirections '>' '<' '>>' '<<' Je pense que c'est moins dur que le reste :D
-     - Gestion des pipes '|'
+     - Gestion des redirections inverses '<' '<<?' Je pense que c'est moins dur que le reste :D
      - Gestion des conditions '||', '&&' ---> ça doit pas être si dûr que ça ;)
      - Gestion du '*' --> ça n'a pas l'air aussi facile qu'on le pense...
-   . Interface en ncurses ---> Readline c'est bien, mais y'a moyen de faire mieux.
-   . Problèmes de LICENCE : readline est sous GPL, ai-je le droit de mettre philsh sous BSD ? (Je pense que oui)
-     Par contre si quelqu'un modifie philsh et rend les modifications propriétaires, il viole la GPL
-     s'il utilise readline... A mediter :D
-
-
-
