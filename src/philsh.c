@@ -83,7 +83,8 @@ void mode_raw(int activer)
 }
 /* }}} */
 
-
+/* La boucle philsh() */
+/* {{{ philsh() */
 void philsh(void)
 {
    char *prompt, saisie[SIZE_SAISIE], c;
@@ -102,16 +103,23 @@ void philsh(void)
 	 mode_raw(1);
 	 c = getchar();
 	 mode_raw(0);
-	 if(c == 13)
+	 /* fin de saisie ou ctrl+c
+	  * ou ctrl+z */
+	 if(c == 13 || c == 3 || c == 26)
 	 {
 	    printf("\n");
 	    break;
 	 }
+	 /* ctrl+d --> exit */
+	 if(c == 4)
+	    exit(1);
+	 /* TAB */
 	 if (c == 9)
 	 {
 	    /* TODO : completion */
 	    continue;
 	 }
+	 /* BACK */
 	 if(c == 127)
 	 {
 	    if(i == 0)
@@ -135,6 +143,7 @@ void philsh(void)
    }
    return;
 }
+/* }}} */
 
 /* {{{ main() */
 /* Ici commence l'aventure */
