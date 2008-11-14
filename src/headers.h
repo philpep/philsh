@@ -25,5 +25,6 @@
 #include "readconfig.h"
 #include "file_instruction.h"
 #include "exec.h"
+#include "complete.h"
 
 #endif /* _HEADER */

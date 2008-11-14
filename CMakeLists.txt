@@ -23,6 +23,7 @@ project(${PROJECT_NAME} C)
 # Definition of the philsh source
 set(philsh_src
   src/prompt.c
+  src/complete.c
   src/exec.c
   src/file_instruction.c
   src/readconfig.c

@@ -56,7 +56,7 @@ void init_env(void)
 /* }}} */
 
 /* mode_raw permet de switcher entre
- * le mode raw (1) et le mode cooked (2) */
+ * le mode raw (1) et le mode cooked (0) */
 /* {{{ mode_raw */
 void mode_raw(int activer)
 {
@@ -87,10 +87,11 @@ void mode_raw(int activer)
 /* {{{ philsh() */
 void philsh(void)
 {
-   char *prompt, saisie[SIZE_SAISIE], c;
+   char *prompt, *saisie, c, *completion;
    size_t i;
    int ret = 0;
    file_instruction *liste_instruction = NULL;
+   saisie = malloc(sizeof(char) * SIZE_SAISIE);
    for(;;)
    {
       i = 0;
@@ -116,7 +117,16 @@ void philsh(void)
 	 /* TAB */
 	 if (c == 9)
 	 {
-	    /* TODO : completion */
+	    saisie[i] = '\0';
+	    completion = file_complete(saisie);
+	    if(completion != NULL)
+	    {
+	       strcat(saisie, completion);
+	       printf("%s", completion);
+	       /* TODO : securiser tout ça !!! */
+	       i += strlen(completion);
+	       free(completion);
+	    }
 	    continue;
 	 }
 	 /* BACK */
@@ -124,8 +134,7 @@ void philsh(void)
 	 {
 	    if(i == 0)
 	       continue;
-	    printf("\b ");
-	    printf("\b");
+	    printf("\b \b");
 	    i--;
 	    continue;
 	 }
@@ -141,6 +150,7 @@ void philsh(void)
 #endif
       free_file_instruction(liste_instruction);
    }
+   free(saisie);
    return;
 }
 /* }}} */
