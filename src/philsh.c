@@ -55,31 +55,82 @@ void init_env(void)
 }
 /* }}} */
 
+/* mode_raw permet de switcher entre
+ * le mode raw (1) et le mode cooked (2) */
+/* {{{ mode_raw */
+void mode_raw(int activer)
+{
+   static struct termios cooked;
+   static int raw_actif = 0;
+
+   if (raw_actif == activer)
+      return;
+
+   if (activer)
+   {
+      struct termios raw;
+
+      tcgetattr(STDIN_FILENO, &cooked);
+
+      raw = cooked;
+      cfmakeraw(&raw);
+      tcsetattr(STDIN_FILENO, TCSANOW, &raw);
+   }
+   else
+      tcsetattr(STDIN_FILENO, TCSANOW, &cooked);
+
+   raw_actif = activer;
+}
+/* }}} */
+
+
 void philsh(void)
 {
-   int fd_stdin, fd_stdout, ret = 0;
-   char *p, *prompt, saisie[256];
+   char *prompt, saisie[SIZE_SAISIE], c;
+   size_t i;
+   int ret = 0;
    file_instruction *liste_instruction = NULL;
    for(;;)
    {
+      i = 0;
+      /* On affiche le prompt */
       prompt = set_prompt(ret);
       printf("%s", prompt);
-      fflush(stdin);
-      fgets(saisie, 256, stdin);
-      fflush(stdin);
-      fd_stdout = dup(1);
-      fd_stdin = dup(0);
-      p = strchr(saisie, '\n');
-      *p = '\0';
+      /* On recupère la saisie */
+      while(i < SIZE_SAISIE)
+      {
+	 mode_raw(1);
+	 c = getchar();
+	 mode_raw(0);
+	 if(c == 13)
+	 {
+	    printf("\n");
+	    break;
+	 }
+	 if (c == 9)
+	 {
+	    /* TODO : completion */
+	    continue;
+	 }
+	 if(c == 127)
+	 {
+	    if(i == 0)
+	       continue;
+	    printf("\b ");
+	    printf("\b");
+	    i--;
+	    continue;
+	 }
+	 saisie[i++] = c;
+	 printf("%c", c);
+      }
+      mode_raw(0);
+      saisie[i] = '\0';
       liste_instruction = creat_liste_instruction(saisie);
       ret = exec_file(liste_instruction);
 #ifdef DEBUG
       afficher_liste_instruction(liste_instruction);
 #endif
-      close(1);
-      dup(fd_stdout);
-      close(0);
-      dup(fd_stdin);
       free_file_instruction(liste_instruction);
    }
    return;

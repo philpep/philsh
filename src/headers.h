@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <termios.h> /* for raw mode */
 #include <unistd.h>
 #include <pwd.h>
 #include <signal.h>
