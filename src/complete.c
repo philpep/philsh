@@ -6,7 +6,48 @@
 #include "complete.h"
 
 
+void init_command_name(void)
+{
+   char *path = malloc(sizeof(char) * (1+strlen(getenv("PATH"))));
+   char *dir_name;
+   DIR *dir;
+   struct dirent *file;
+   size_t comands = 0;
+   strcpy(path, getenv("PATH"));
+   dir_name = strtok(path, ":");
+   while(dir_name != NULL)
+   {
+      if((dir = opendir(dir_name)))
+      {
+	 while((file = readdir(dir)))
+	    comands++;
+      }
+      closedir(dir);
+      dir_name = strtok(NULL, ":");
+   }
+   command_names = malloc(sizeof(char *) * comands);
+   comands = 0;
+   strcpy(path, getenv("PATH"));
+   dir_name = strtok(path, ":");
+   while(dir_name != NULL)
+   {
+      if((dir = opendir(dir_name)))
+      {
+	 while((file = readdir(dir)))
+	 {
+	    command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
+	    strcpy(command_names[comands++], file->d_name);
+	 }
+      }
+      closedir(dir);
+      dir_name = strtok(NULL, ":");
+   }
+   command_names[comands] = NULL;
+   return;
+}
+
 /* Completion sur les fichiers */
+/* {{{ file_complete() */
 char *file_complete(char *str)
 {
    char *p = strrchr(str, ' ');
@@ -16,7 +57,7 @@ char *file_complete(char *str)
    size_t match = 0, i, j;
    unsigned char type;
    if(p == NULL)
-      return NULL;
+      return comand_complete(str);
    while(*p == ' ')
       p++;
    if(*p == '\0')
@@ -83,6 +124,51 @@ char *file_complete(char *str)
 	 }
       }
       closedir(rep);
+   }
+   return NULL;
+}
+/* }}} */
+
+
+char *comand_complete(char *str)
+{
+   char *p = str, *q[MAX_COMPLETION];
+   size_t match = 0, i = 0, j;
+   if(p == NULL || p[0] == '\0')
+      return NULL;
+   while(*p == ' ')
+      p++;
+   while(command_names[i] != NULL)
+   {
+      if (match > MAX_COMPLETION)
+	 break;
+      if(!strncmp(p, command_names[i], strlen(p)))
+	 q[match++] = command_names[i];
+      i++;
+   }
+   if(match == 1)
+   {
+      match = strlen(p);
+      p = malloc(sizeof(char) * (2+strlen(q[0]+match)));
+      strcpy(p, q[0]+match);
+      return p;
+   }
+   else if(match != 0)
+   {
+      for(j = 0; j < strlen(q[0])-strlen(p); j++)
+      {
+	 for(i = 0; i < match; i++)
+	 {
+	    if(q[i][j+strlen(p)] != q[0][j+strlen(p)])
+	    {
+	       match = strlen(p);
+	       p = malloc(sizeof(char) * (strlen(q[0]+match)-j+2));
+	       strncpy(p, q[0]+match, j);
+	       p[j] = '\0';
+	       return p;
+	    }
+	 }
+      }
    }
    return NULL;
 }

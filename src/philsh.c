@@ -173,6 +173,7 @@ int main (int argc, char **argv)
    sprintf(config_file, "%s/%s", user->pw_dir, ".philshrc");
    init_config(config_file);
    free(config_file);
+   init_command_name();
    philsh();
    return 0;
 }
