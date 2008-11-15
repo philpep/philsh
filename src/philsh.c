@@ -121,10 +121,12 @@ void philsh(void)
 	    completion = file_complete(saisie);
 	    if(completion != NULL)
 	    {
-	       strcat(saisie, completion);
-	       printf("%s", completion);
-	       /* TODO : securiser tout ça !!! */
-	       i += strlen(completion);
+	       if(strlen(completion) < SIZE_SAISIE-i)
+	       {
+		  strcat(saisie, completion);
+		  printf("%s", completion);
+		  i += strlen(completion);
+	       }
 	       free(completion);
 	    }
 	    continue;
