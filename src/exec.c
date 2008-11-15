@@ -20,6 +20,7 @@
 #include "int/alias.h" /* Pour alias() unalias() */
 #include "readconfig.h" /* Pour source() */
 #include "exec.h"
+#include <signal.h>
 
 struct lljobs *liste_jobs = NULL;
 
