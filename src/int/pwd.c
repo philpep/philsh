@@ -3,7 +3,6 @@
  * philsh is under BSD licence, see LICENCE file for more informations.
  *
  */ 
-#define _GNU_SOURCE /* for get_current_dir_name() definition */
 #define _BSD_SOURCE /* for setenv() definition */
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,7 +18,17 @@
 /* TODO : gestion des liens symboliques */
 char * get_current_dir(void)
 {
-   char *p = get_current_dir_name();
+   size_t i = 50;
+   char *p = malloc(sizeof(char) * i);
+   while(NULL == getcwd(p, i))
+   {
+      i+=10;
+      if (NULL == realloc(p, sizeof(char) * i))
+      {
+        fprintf(stderr,"Warning : unable to set current directory !\n");
+        return p;
+      }
+   }
    setenv("PWD", p, 1);
    return p;
 }
