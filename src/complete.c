@@ -21,8 +21,8 @@ void init_command_name(void)
       {
 	 while((file = readdir(dir)))
 	    comands++;
+         closedir(dir);
       }
-      closedir(dir);
       dir_name = strtok(NULL, ":");
    }
    command_names = malloc(sizeof(char *) * comands);
@@ -38,8 +38,8 @@ void init_command_name(void)
 	    command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
 	    strcpy(command_names[comands++], file->d_name);
 	 }
+         closedir(dir);
       }
-      closedir(dir);
       dir_name = strtok(NULL, ":");
    }
    command_names[comands] = NULL;
