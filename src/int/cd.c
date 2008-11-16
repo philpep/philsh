@@ -86,25 +86,27 @@ int internal_cd(int argc, char **argv)
    oldpwd = get_current_dir();
    setenv("OLDPWD", oldpwd, 1);
    free(oldpwd);
-   ret = chdir(chemin);
-   err = errno;
-   switch (err)
+   if(0 != (ret = chdir(chemin)))
    {
-      case EACCES:
-	 fprintf(stderr, "Philsh: %s permission non accordée\n", chemin);
-	 break;
-      case EIO:
-	 fprintf(stderr, "Philsh: %s erreur d'entrée/sortie\n", chemin);
-	 break;
-      case ENAMETOOLONG:
-	 fprintf(stderr, "Philsh: %s path trop long\n", chemin);
-	 break;
-      case ENOENT:
-	 fprintf(stderr, "Philsh: aucun fichier ou dossier de ce type : %s\n", chemin);
-	 break;
-      case EFAULT:
-	 fprintf(stderr, "Philsh: %s pointe en dehors de l'espace d'adressage accessible\n", chemin);
-	 break;
+      err = errno;
+      switch (err)
+      {
+	 case EACCES:
+	    fprintf(stderr, "Philsh: %s permission non accordée\n", chemin);
+	    break;
+	 case EIO:
+	    fprintf(stderr, "Philsh: %s erreur d'entrée/sortie\n", chemin);
+	    break;
+	 case ENAMETOOLONG:
+	    fprintf(stderr, "Philsh: %s path trop long\n", chemin);
+	    break;
+	 case ENOENT:
+	    fprintf(stderr, "Philsh: aucun fichier ou dossier de ce type : %s\n", chemin);
+	    break;
+	 case EFAULT:
+	    fprintf(stderr, "Philsh: %s pointe en dehors de l'espace d'adressage accessible\n", chemin);
+	    break;
+      }
    }
    free(chemin);
    return ret;
