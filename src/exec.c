@@ -169,7 +169,12 @@ int exec_file(file_instruction *liste)
       /* S'il reste des instructions, on les executes sinon on
        * renvoie la valeur de retour */
       if(liste->next != NULL)
-	 return exec_file(liste->next);
+      {
+	 if((liste->flags & OR) && ret == 0)
+	    return ret;
+	 else
+	    return exec_file(liste->next);
+      }
       else
 	 return ret;
    }
