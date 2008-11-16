@@ -87,7 +87,7 @@ void mode_raw(int activer)
 /* {{{ philsh() */
 void philsh(void)
 {
-   char *prompt, *saisie, c, *completion;
+   char *prompt, *saisie, c, d, *completion;
    size_t i;
    int ret = 0;
    file_instruction *liste_instruction = NULL;
@@ -106,6 +106,7 @@ void philsh(void)
 	 mode_raw(0);
 	 /* fin de saisie ou ctrl+c
 	  * ou ctrl+z */
+	 d = c;
 	 if(c == 13 || c == 3 || c == 26)
 	 {
 	    printf("\n");
@@ -118,7 +119,10 @@ void philsh(void)
 	 if (c == 9)
 	 {
 	    saisie[i] = '\0';
-	    completion = file_complete(saisie);
+	    if(d == 9)
+	       completion = file_complete(saisie, 1, prompt);
+	    else
+	       completion = file_complete(saisie, 0, prompt);
 	    if(completion != NULL)
 	    {
 	       if(strlen(completion) < SIZE_SAISIE-i)

@@ -31,7 +31,7 @@ void init_command_name(void)
       {
 	 while((file = readdir(dir)))
 	    comands++;
-         closedir(dir);
+	 closedir(dir);
       }
       dir_name = strtok(NULL, ":");
    }
@@ -48,7 +48,7 @@ void init_command_name(void)
 	    command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
 	    strcpy(command_names[comands++], file->d_name);
 	 }
-         closedir(dir);
+	 closedir(dir);
       }
       dir_name = strtok(NULL, ":");
    }
@@ -59,7 +59,7 @@ void init_command_name(void)
 
 /* Completion sur les fichiers */
 /* {{{ file_complete() */
-char *file_complete(char *str)
+char *file_complete(char *str, int verbose, char *prompt)
 {
    char *p = strrchr(str, ' ');
    char *q[MAX_COMPLETION], *path;
@@ -69,10 +69,10 @@ char *file_complete(char *str)
    unsigned char type;
    struct stat file_stat;
    if(p == NULL)
-      return comand_complete(str);
+      return comand_complete(str, verbose, prompt);
    while(*p == ' ')
       p++;
-   if(*p == '\0')
+   if(*p == '\0' && verbose == 0)
       return NULL;
    /* path absolu */
    if(NULL != (q[0] = strrchr(p, '/')))
@@ -124,6 +124,14 @@ char *file_complete(char *str)
       }
       else if(match != 0)
       {
+	 if(1 == verbose)
+	 {
+	    printf("\n");
+	    for(i = 0; i < match; i++)
+	       printf("%s\t", q[i]);
+	    printf("\n");
+	    printf("%s%s", prompt, str);
+	 }
 	 for(j = 0; j < strlen(q[0])-strlen(p); j++)
 	 {
 	    for(i = 0; i < match; i++)
@@ -149,7 +157,7 @@ char *file_complete(char *str)
 
 /* Completion des commandes */
 /* {{{ comand_complete() */
-char *comand_complete(char *str)
+char *comand_complete(char *str, int verbose, char *prompt)
 {
    char *p = str, *q[MAX_COMPLETION];
    size_t match = 0, i = 0, j;
@@ -175,6 +183,14 @@ char *comand_complete(char *str)
    }
    else if(match != 0)
    {
+      if(1 == verbose)
+      {
+	 printf("\n");
+	 for(i = 0; i < match; i++)
+	    printf("%s\t", q[i]);
+	 printf("\n");
+	 printf("%s%s", prompt, str);
+      }
       for(j = 0; j < strlen(q[0])-strlen(p); j++)
       {
 	 for(i = 0; i < match; i++)
