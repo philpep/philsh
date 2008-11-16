@@ -105,6 +105,9 @@ int internal_cd(int argc, char **argv)
 	    break;
 	 case EFAULT:
 	    fprintf(stderr, "Philsh: %s pointe en dehors de l'espace d'adressage accessible\n", chemin);
+	 case ENOTDIR:
+	    fprintf(stderr, "Philsh : %s n'est pas un dossier\n", chemin);
+	    break;
 	 default:
 	    fprintf(stderr, "Philsh : %s permission non accordée\n", chemin);
 	    break;
