@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 #include "complete.h"
 
@@ -65,6 +67,7 @@ char *file_complete(char *str)
    struct dirent *file;
    size_t match = 0, i, j;
    unsigned char type;
+   struct stat file_stat;
    if(p == NULL)
       return comand_complete(str);
    while(*p == ' ')
@@ -111,6 +114,12 @@ char *file_complete(char *str)
 	 strcpy(p, q[0]+match);
 	 if(type == DT_DIR)
 	    strcat(p, "/");
+	 else if(type == DT_LNK)
+	 {
+	    stat(q[0], &file_stat);
+	    if(S_ISDIR(file_stat.st_mode))
+	       strcat(p, "/");
+	 }
 	 closedir(rep);
 	 return p;
       }

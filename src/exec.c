@@ -24,12 +24,12 @@
 
 struct lljobs *liste_jobs = NULL;
 
-/* {{{ exec_file_instruction() */
 /* LA fonction d'execution de philsh,
  * elle prend en paramêtre une file d'instruction
  * (structure définie dans file_instruction.h)
  * elle retourne la valeur de retour de la dernière
  * instruction */
+/* {{{ exec_file_instruction() */
 int exec_file(file_instruction *liste)
 {
    char *ptr, *path;
@@ -184,8 +184,8 @@ int exec_file(file_instruction *liste)
 
 /* }}} */
 
-/* {{{ builtin exit && jobs && help */
 /* Affiche simplement l'aide */
+/* {{{ builtin exit && jobs && help */
 int help(int argc, char **argv)
 {
    if(argc != 1)
@@ -238,12 +238,12 @@ int exit_philsh(int argc, char **argv)
 }
 /* }}} */
 
-/* {{{ WaitForChild() && HandleInterrupt() */
 /* Cette fonction attend un changement d'état d'un des
  * processus fils.
  * Si le fils est terminé, on stoque sa valeur
  * de retour dans ret...
  */
+/* {{{ WaitForChild() && HandleInterrupt() */
 int WaitForChild(pid_t pid, int *ret)
 {
    pid_t cpid;
@@ -301,9 +301,9 @@ void HandleInterrupt(int sig)
 }
 /* }}} */
 
-/* {{{ jobs functions */
 /* Ce sont des fonction de modifications de listes chainées
  * toutes simples */
+/* {{{ jobs functions */
 lljobs *add_job(lljobs *liste, char *name, pid_t pid)
 {
    struct lljobs *new = malloc(sizeof(lljobs));
