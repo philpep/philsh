@@ -140,6 +140,13 @@ void philsh(void)
 	    i--;
 	    continue;
 	 }
+	 /* Special keys */
+	 if(c == 27)
+	 {
+	    getchar();
+	    getchar();
+	    continue;
+	 }
 	 saisie[i++] = c;
 	 printf("%c", c);
       }
