@@ -105,6 +105,8 @@ int internal_cd(int argc, char **argv)
 	    break;
 	 case EFAULT:
 	    fprintf(stderr, "Philsh: %s pointe en dehors de l'espace d'adressage accessible\n", chemin);
+	 default:
+	    fprintf(stderr, "Philsh : %s permission non accordée\n", chemin);
 	    break;
       }
    }
