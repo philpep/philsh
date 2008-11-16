@@ -1,3 +1,9 @@
+/*
+ * Copyright (C) 2008 Philippe Pepiot <philippe.pepiot@gmail.com>
+ * philsh is under BSD licence, see LICENCE file for more informations.
+ *
+ */ 
+
 #define _BSD_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -5,7 +11,9 @@
 #include <dirent.h>
 #include "complete.h"
 
-
+/* Initialisation de la liste des commandes
+ * une sorte de source profile */
+/* {{{ init_command_name() */
 void init_command_name(void)
 {
    char *path = malloc(sizeof(char) * (1+strlen(getenv("PATH"))));
@@ -45,6 +53,7 @@ void init_command_name(void)
    command_names[comands] = NULL;
    return;
 }
+/* }}} */
 
 /* Completion sur les fichiers */
 /* {{{ file_complete() */
@@ -130,6 +139,8 @@ char *file_complete(char *str)
 /* }}} */
 
 
+/* Completion des commandes */
+/* {{{ comand_complete() */
 char *comand_complete(char *str)
 {
    char *p = str, *q[MAX_COMPLETION];
@@ -149,8 +160,9 @@ char *comand_complete(char *str)
    if(match == 1)
    {
       match = strlen(p);
-      p = malloc(sizeof(char) * (2+strlen(q[0]+match)));
+      p = malloc(sizeof(char) * (3+strlen(q[0]+match)));
       strcpy(p, q[0]+match);
+      strcat(p, " ");
       return p;
    }
    else if(match != 0)
@@ -172,3 +184,4 @@ char *comand_complete(char *str)
    }
    return NULL;
 }
+/* }}} */
