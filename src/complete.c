@@ -75,9 +75,8 @@ char *file_complete(char *str)
    if(*p == '\0')
       return NULL;
    /* path absolu */
-   if(*p == '/')
+   if(NULL != (q[0] = strrchr(p, '/')))
    {
-      q[0] = strrchr(p, '/');
       if(q[0] == p)
       {
 	 path = malloc(sizeof(char) * 2);
