@@ -45,8 +45,11 @@ void init_command_name(void)
       {
 	 while((file = readdir(dir)))
 	 {
-	    command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
-	    strcpy(command_names[comands++], file->d_name);
+	    if(file->d_name[0] != '.')
+	    {
+	       command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
+	       strcpy(command_names[comands++], file->d_name);
+	    }
 	 }
 	 closedir(dir);
       }
@@ -102,8 +105,13 @@ char *file_complete(char *str, int verbose, char *prompt)
 	    break;
 	 if(!strncmp(p, file->d_name, strlen(p)))
 	 {
-	    q[match++] = file->d_name;
-	    type = file->d_type;
+	    /* Ne prendre les fichier cachés que si
+	     * necessaire... */
+	    if('.' != file->d_name[0] || '.' == p[0])
+	    {
+	       q[match++] = file->d_name;
+	       type = file->d_type;
+	    }
 	 }
       }
       if(match == 1)

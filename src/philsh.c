@@ -106,7 +106,6 @@ void philsh(void)
 	 mode_raw(0);
 	 /* fin de saisie ou ctrl+c
 	  * ou ctrl+z */
-	 d = c;
 	 if(c == 13 || c == 3 || c == 26)
 	 {
 	    printf("\n");
@@ -133,6 +132,7 @@ void philsh(void)
 	       }
 	       free(completion);
 	    }
+	    d = c;
 	    continue;
 	 }
 	 /* BACK */
@@ -142,6 +142,7 @@ void philsh(void)
 	       continue;
 	    printf("\b \b");
 	    i--;
+	    d = c;
 	    continue;
 	 }
 	 /* Special keys */
@@ -149,10 +150,12 @@ void philsh(void)
 	 {
 	    getchar();
 	    getchar();
+	    d = c;
 	    continue;
 	 }
 	 saisie[i++] = c;
 	 printf("%c", c);
+	 d = c;
       }
       mode_raw(0);
       saisie[i] = '\0';
