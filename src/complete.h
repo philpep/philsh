@@ -19,4 +19,5 @@ typedef struct _file_completion {
 } file_completion;
 
 file_completion *add_file_completion(char *name, unsigned char type, file_completion *liste);
+void free_file_completion(file_completion *liste);
 #endif /* _COMPLETE_HEARDER */

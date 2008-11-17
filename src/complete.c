@@ -143,6 +143,7 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 	 if(ll->type == DT_DIR)
 	    strcat(p, "/");
 	 closedir(rep);
+	 free(ll);
 	 return p;
       }
       else if(ll != NULL && ll->next != NULL)
@@ -174,6 +175,7 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 		  strncpy(p, ll->name+lenght, j);
 		  p[j] = '\0';
 		  closedir(rep);
+		  free_file_completion(ll);
 		  return p;
 	       }
 	       p_ll = p_ll->next;
@@ -182,6 +184,7 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
       }
       closedir(rep);
    }
+   free_file_completion(ll);
    return NULL;
 }
 /* }}} */
@@ -243,6 +246,7 @@ char *comand_complete(char *str, unsigned int flags, char *prompt)
 /* }}} */
 
 /* Gestion de la liste chainée des correspondances */
+/* {{{ fonctions de traitement de la liste */
 file_completion *add_file_completion(char *name, unsigned char type, file_completion *liste)
 {
    file_completion *new = malloc(sizeof(file_completion));
@@ -259,3 +263,18 @@ file_completion *add_file_completion(char *name, unsigned char type, file_comple
    new->next = liste;
    return new;
 }
+
+void free_file_completion(file_completion *liste)
+{
+   file_completion *p;
+   if(liste == NULL)
+      return;
+   else
+   {
+      p = liste->next;
+      free(liste);
+      return free_file_completion(p);
+   }
+}
+
+/* }}} */
