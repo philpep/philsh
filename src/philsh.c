@@ -87,9 +87,10 @@ void mode_raw(int activer)
 /* {{{ philsh() */
 void philsh(void)
 {
-   char *prompt, *saisie, c, d, *completion;
+   char *prompt, *saisie, c, d = -1, *completion;
    size_t i;
    int ret = 0;
+   unsigned int flags = NOVERBOSE;
    file_instruction *liste_instruction = NULL;
    saisie = malloc(sizeof(char) * SIZE_SAISIE);
    for(;;)
@@ -104,6 +105,14 @@ void philsh(void)
 	 mode_raw(1);
 	 c = getchar();
 	 mode_raw(0);
+	 if(c == 9 && d == 9)
+	    flags = VERBOSE;
+	 else
+	 {
+	    d = c;
+	    flags = NOVERBOSE;
+	 }
+	    
 	 /* fin de saisie ou ctrl+c
 	  * ou ctrl+z */
 	 if(c == 13 || c == 3 || c == 26)
@@ -118,10 +127,7 @@ void philsh(void)
 	 if (c == 9)
 	 {
 	    saisie[i] = '\0';
-	    if(d == 9)
-	       completion = file_complete(saisie, 1, prompt);
-	    else
-	       completion = file_complete(saisie, 0, prompt);
+	       completion = file_complete(saisie, flags, prompt);
 	    if(completion != NULL)
 	    {
 	       if(strlen(completion) < SIZE_SAISIE-i)
@@ -132,7 +138,6 @@ void philsh(void)
 	       }
 	       free(completion);
 	    }
-	    d = c;
 	    continue;
 	 }
 	 /* BACK */
@@ -142,7 +147,6 @@ void philsh(void)
 	       continue;
 	    printf("\b \b");
 	    i--;
-	    d = c;
 	    continue;
 	 }
 	 /* Special keys */
@@ -150,12 +154,10 @@ void philsh(void)
 	 {
 	    getchar();
 	    getchar();
-	    d = c;
 	    continue;
 	 }
 	 saisie[i++] = c;
 	 printf("%c", c);
-	 d = c;
       }
       mode_raw(0);
       saisie[i] = '\0';

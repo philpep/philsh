@@ -62,97 +62,121 @@ void init_command_name(void)
 
 /* Completion sur les fichiers */
 /* {{{ file_complete() */
-char *file_complete(char *str, int verbose, char *prompt)
+char *file_complete(char *str, unsigned int flags, char *prompt)
 {
-   char *p = strrchr(str, ' ');
-   char *q[MAX_COMPLETION], *path;
+   char *p = strrchr(str, ' '), *path, *q;
    DIR *rep;
    struct dirent *file;
-   size_t match = 0, i, j;
+   size_t lenght, j;
    unsigned char type;
    struct stat file_stat;
+   file_completion *ll = NULL, *p_ll = NULL;
+   /* Si la commande est cd : completion uniquement
+    * sur les dossiers */
+   /*
+      if(!strncmp(str, "cd ", 3))
+      flags |= DIR_ONLY;
+      */
+   /* S'il n'y a pas d'espaces, c'est qu'on cherche
+    * une commande */
    if(p == NULL)
-      return comand_complete(str, verbose, prompt);
+      return comand_complete(str, flags, prompt);
+   /* On grille les espaces */
    while(*p == ' ')
       p++;
-   if(*p == '\0' && verbose == 0)
+   /* S'il n'y a pas de debut de chaine */
+   if(*p == '\0' && (flags & NOVERBOSE))
       return NULL;
-   /* path absolu */
-   if(NULL != (q[0] = strrchr(p, '/')))
+   /* On cherche le repertoire qu'il faut completer */
+   if(NULL != (q = strrchr(p, '/')))
    {
-      if(q[0] == p)
+      /* Si /foo<tab> */
+      if(q == p)
       {
 	 path = malloc(sizeof(char) * 2);
 	 strcpy(path, "/");
       }
+      /* Sinon foo/bar<tab> */
       else
       {
-	 path = malloc(sizeof(char) * (1+q[0]-p));
-	 strncpy(path, p, q[0]-p);
-	 path[q[0]-p] = '\0';
+	 path = malloc(sizeof(char) * (1+q-p));
+	 strncpy(path, p, q-p);
+	 path[q-p] = '\0';
       }
-      p = q[0]+1;
+      p = q+1;
       rep = opendir(path);
       free(path);
    }
+   /* Sinon on cherche dans
+    * le repertoire courrant */
    else
       rep = opendir(".");
    if(rep != NULL)
    {
       while((file = readdir (rep)))
       {
-	 if(match == MAX_COMPLETION)
-	    break;
+	 /* Si le debut de chaine correspond
+	  * à un fichier */
 	 if(!strncmp(p, file->d_name, strlen(p)))
 	 {
 	    /* Ne prendre les fichier cachés que si
 	     * necessaire... */
 	    if('.' != file->d_name[0] || '.' == p[0])
 	    {
-	       q[match++] = file->d_name;
 	       type = file->d_type;
+	       if(flags & DIR_ONLY)
+	       {
+		  stat(file->d_name, &file_stat);
+		  if(S_ISDIR(file_stat.st_mode))
+		     ll = add_file_completion(file->d_name, file->d_type, ll);
+	       }
+	       else
+		  ll = add_file_completion(file->d_name, file->d_type, ll);
 	    }
 	 }
       }
-      if(match == 1)
+      if(ll != NULL && ll->next == NULL)
       {
-	 match = strlen(p);
-	 p = malloc(sizeof(char) * (2+strlen(q[0]+match)));
-	 strcpy(p, q[0]+match);
-	 if(type == DT_DIR)
+	 lenght = strlen(p);
+	 p = malloc(sizeof(char) * (2+strlen(ll->name+lenght)));
+	 strcpy(p, ll->name+lenght);
+	 if(ll->type == DT_DIR)
 	    strcat(p, "/");
-	 else if(type == DT_LNK)
-	 {
-	    stat(q[0], &file_stat);
-	    if(S_ISDIR(file_stat.st_mode))
-	       strcat(p, "/");
-	 }
 	 closedir(rep);
 	 return p;
       }
-      else if(match != 0)
+      else if(ll != NULL && ll->next != NULL)
       {
-	 if(1 == verbose)
+	 if(!(flags & VERBOSE))
 	 {
 	    printf("\n");
-	    for(i = 0; i < match; i++)
-	       printf("%s\t", q[i]);
+	    p_ll = ll;
+	    while(p_ll != NULL)
+	    {
+	       if(p_ll->type == DT_DIR)
+		  printf("\033[34m%s\t\033[37m", p_ll->name);
+	       else
+		  printf("%s\t", p_ll->name);
+	       p_ll = p_ll->next;
+	    }
 	    printf("\n");
 	    printf("%s%s", prompt, str);
 	 }
-	 for(j = 0; j < strlen(q[0])-strlen(p); j++)
+	 for(j = 0; j < strlen(ll->name)-strlen(p); j++)
 	 {
-	    for(i = 0; i < match; i++)
+	    p_ll = ll;
+	    while(p_ll != NULL)
 	    {
-	       if(q[i][j+strlen(p)] != q[0][j+strlen(p)])
+	       if(p_ll->name[j+strlen(p)] != ll->name[j+strlen(p)])
 	       {
-		  match = strlen(p);
-		  p = malloc(sizeof(char) * (strlen(q[0]+match)-j+2));
-		  strncpy(p, q[0]+match, j);
+		  lenght = strlen(p);
+		  p = malloc(sizeof(char) * (strlen(p_ll->name+lenght)-j+2));
+		  strncpy(p, ll->name+lenght, j);
 		  p[j] = '\0';
 		  closedir(rep);
 		  return p;
 	       }
+	       p_ll = p_ll->next;
 	    }
 	 }
       }
@@ -165,7 +189,7 @@ char *file_complete(char *str, int verbose, char *prompt)
 
 /* Completion des commandes */
 /* {{{ comand_complete() */
-char *comand_complete(char *str, int verbose, char *prompt)
+char *comand_complete(char *str, unsigned int flags, char *prompt)
 {
    char *p = str, *q[MAX_COMPLETION];
    size_t match = 0, i = 0, j;
@@ -191,7 +215,7 @@ char *comand_complete(char *str, int verbose, char *prompt)
    }
    else if(match != 0)
    {
-      if(1 == verbose)
+      if((flags & VERBOSE))
       {
 	 printf("\n");
 	 for(i = 0; i < match; i++)
@@ -217,3 +241,21 @@ char *comand_complete(char *str, int verbose, char *prompt)
    return NULL;
 }
 /* }}} */
+
+/* Gestion de la liste chainée des correspondances */
+file_completion *add_file_completion(char *name, unsigned char type, file_completion *liste)
+{
+   file_completion *new = malloc(sizeof(file_completion));
+   struct stat file_stat;
+   new->name = name;
+   if(type == DT_LNK)
+   {
+      stat(name, &file_stat);
+      if(S_ISDIR(file_stat.st_mode))
+	 new->type = DT_DIR;
+   }
+   else
+      new->type = type;
+   new->next = liste;
+   return new;
+}
