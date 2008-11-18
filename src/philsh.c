@@ -7,12 +7,11 @@
 /* on inclu les headers */
 #include "headers.h"
 
-/* {{{ variables globales */
-
 /* Structure des builtin commandes,
  * char *name;
  * int (*p)(int, char**);
  */
+/* {{{ variables globales */
 const struct builtin builtin_command[] =
 {
    {"pwd", internal_pwd, SAME_PROCESS},
@@ -31,12 +30,12 @@ const struct builtin builtin_command[] =
 };
 /* }}} */
 
-/* {{{ init_env */
 /* Cette fonction initialise l'environnement
  * Si $HOME et $PATH n'existent pas, il faut
  * les créer... En effet, si on lance le programme
  * comme ceci : env -i philsh, tous les getenv()
  * retournent NULL */
+/* {{{ init_env */
 void init_env(void)
 {
    /* L'uid sous lequel tourne philsh */
@@ -173,8 +172,8 @@ void philsh(void)
 }
 /* }}} */
 
-/* {{{ main() */
 /* Ici commence l'aventure */
+/* {{{ main() */
 int main (int argc, char **argv)
 {
    char *config_file;

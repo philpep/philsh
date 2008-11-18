@@ -51,7 +51,7 @@ int exec_file(file_instruction *liste)
       {
 	 ret = p_builtin->p(liste->argc, liste->argv);
 	 if (liste->next != NULL)
-	    	 return exec_file(liste->next);
+	    return exec_file(liste->next);
 	 else
 	    return ret;
       }
@@ -132,13 +132,38 @@ int exec_file(file_instruction *liste)
 	    exit (p_builtin->p(liste->argc, liste->argv));
 	 p_builtin++;
       }
-      /* Sinon, on cherche le chemin vers le premier argument de la liste dans $PATH
+      /* Si la commande est donnée comme un chemin (typiquement ./a.out ou /bin/ls
+       * on execute ce fichier...
+       * sinon, on cherche le chemin vers le premier argument de la liste dans $PATH
        * S'il n'y est pas, on renvoie 127 et s'il y est on remplace le processus
        * courant avec execv (cf man 3 exec) */
-      if(NULL == (path = which_cmd (liste->argv[0])))
-	 fprintf(stderr,"Philsh: command not found : %s\n", liste->argv[0]);
+      if(liste->flags & LOCAL_CMD)
+      {
+	 if(0 != access(liste->argv[0], F_OK | X_OK))
+	 {
+	    switch(errno)
+	    {
+	       case EACCES:
+		  fprintf(stderr,"Philsh: permission denied %s\n", liste->argv[0]);
+		  break;
+	       case ENOENT:
+		  fprintf(stderr,"Philsh: no such file or directory %s\n", liste->argv[0]);
+		  break;
+	       default:
+		  fprintf(stderr,"Philsh: can't access %s\n", liste->argv[0]);
+		  break;
+	    }
+	 }
+	 else
+	    execv(liste->argv[0], liste->argv);
+      }
       else
-	 execv(path, liste->argv);
+      {
+	 if(NULL == (path = which_cmd (liste->argv[0])))
+	    fprintf(stderr,"Philsh: command not found : %s\n", liste->argv[0]);
+	 else
+	    execv(path, liste->argv);
+      }
       exit(127);
    }
    else if(pid != -1)

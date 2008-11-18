@@ -10,6 +10,7 @@
 #define AND 32
 #define OR 64
 #define NOCOND 128
+#define LOCAL_CMD 256
 
 typedef struct _file_instruction
 {

@@ -122,7 +122,6 @@ file_instruction *add_instruction(file_instruction *liste, char *saisie, char *f
    if(argc == 0)
       return liste;
    new = malloc(sizeof(file_instruction));
-   new->flags = flags;
    new->next = NULL;
    /************/
    if(file != NULL)
@@ -165,6 +164,12 @@ file_instruction *add_instruction(file_instruction *liste, char *saisie, char *f
    new->argv[new->argc] = NULL;
    if(buffer != saisie)
       free(buffer);
+   /* On detecte si la commande est un path
+    * (ie : ne pas la chercher dans $PATH) */
+   if('/' == new->argv[0][0] || '.' == new->argv[0][0])
+      new->flags = flags | LOCAL_CMD;
+   else
+      new->flags = flags;
    /************/
    p = liste;
    if(p == NULL)
@@ -189,7 +194,7 @@ void free_file_instruction(file_instruction *liste)
 	 free(q->argv[i]);
       free(q->argv);
       if(q->file != NULL)
-	  free(q->file);
+	 free(q->file);
       free(q);
    }
    return;
@@ -223,6 +228,8 @@ void afficher_liste_instruction(file_instruction *liste)
 	 printf("OR ");
       if(p->flags & NOCOND)
 	 printf("NOCOND ");
+      if(p->flags & LOCAL_CMD)
+	 printf("LOCAL_CMD ");
       printf("\n");
       p = p->next;
    }
