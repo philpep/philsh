@@ -16,4 +16,5 @@ philpep :
      - Gestion des redirections inverses '<' '<<?' Je pense que c'est moins dur que le reste :D
      - Gestion de la conditions '&&' ---> ça doit pas être si dûr que ça ;)
      - Gestion du '*' --> ça n'a pas l'air aussi facile qu'on le pense...
+  . Supprimer les doublons dans la completion
 

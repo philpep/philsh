@@ -22,7 +22,9 @@ void init_command_name(void)
    char *dir_name;
    DIR *dir;
    struct dirent *file;
-   size_t comands = 0;
+   if(command_completion)
+      free_file_completion(command_completion);
+   command_completion = NULL;
    strcpy(path, getenv("PATH"));
    dir_name = strtok(path, ":");
    while(dir_name != NULL)
@@ -30,32 +32,11 @@ void init_command_name(void)
       if((dir = opendir(dir_name)))
       {
 	 while((file = readdir(dir)))
-	    comands++;
+	    command_completion = add_file_completion(file->d_name, file->d_type, command_completion);
 	 closedir(dir);
       }
       dir_name = strtok(NULL, ":");
    }
-   command_names = malloc(sizeof(char *) * comands);
-   comands = 0;
-   strcpy(path, getenv("PATH"));
-   dir_name = strtok(path, ":");
-   while(dir_name != NULL)
-   {
-      if((dir = opendir(dir_name)))
-      {
-	 while((file = readdir(dir)))
-	 {
-	    if(file->d_name[0] != '.')
-	    {
-	       command_names[comands] = malloc(sizeof(char) * (1+strlen(file->d_name)));
-	       strcpy(command_names[comands++], file->d_name);
-	    }
-	 }
-	 closedir(dir);
-      }
-      dir_name = strtok(NULL, ":");
-   }
-   command_names[comands] = NULL;
    return;
 }
 /* }}} */
@@ -80,7 +61,15 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
    /* S'il n'y a pas d'espaces, c'est qu'on cherche
     * une commande */
    if(p == NULL)
-      return comand_complete(str, flags, prompt);
+   {
+      p = str;
+      while(*p == ' ')
+	 p++;
+      /* Si on cherche une commande dans $PATH */
+      if(*p != '/' && *p != '.')
+	 return comand_complete(str, flags, prompt);
+      /* Sinon on continu sur la completion de fichier */
+   }
    /* On grille les espaces */
    while(*p == ' ')
       p++;
@@ -135,7 +124,9 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 	    }
 	 }
       }
-      if(ll != NULL && ll->next == NULL)
+      if(ll == NULL)
+	 return NULL;
+      else if(ll->next == NULL)
       {
 	 lenght = strlen(p);
 	 p = malloc(sizeof(char) * (2+strlen(ll->name+lenght)));
@@ -143,10 +134,11 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 	 if(ll->type == DT_DIR)
 	    strcat(p, "/");
 	 closedir(rep);
+	 free(ll->name);
 	 free(ll);
 	 return p;
       }
-      else if(ll != NULL && ll->next != NULL)
+      else
       {
 	 if(!(flags & VERBOSE))
 	 {
@@ -194,53 +186,50 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 /* {{{ comand_complete() */
 char *comand_complete(char *str, unsigned int flags, char *prompt)
 {
-   char *p = str, *q[MAX_COMPLETION];
-   size_t match = 0, i = 0, j;
+   file_completion *ll = NULL, *p_ll;
+   char *p  = str;
+   size_t i;
    if(p == NULL || p[0] == '\0')
       return NULL;
    while(*p == ' ')
       p++;
-   while(command_names[i] != NULL)
+   p_ll = command_completion;
+   while(p_ll != NULL)
    {
-      if (match > MAX_COMPLETION)
-	 break;
-      if(!strncmp(p, command_names[i], strlen(p)))
-	 q[match++] = command_names[i];
-      i++;
+      if(!strncmp(p, p_ll->name, strlen(p)))
+	 ll = add_file_completion(p_ll->name, p_ll->type, ll);
+      p_ll = p_ll->next;
    }
-   if(match == 1)
+   if(ll == NULL)
    {
-      match = strlen(p);
-      p = malloc(sizeof(char) * (3+strlen(q[0]+match)));
-      strcpy(p, q[0]+match);
+      free_file_completion(ll);
+      return NULL;
+   }
+   else if(ll->next == NULL)
+   {
+      /* Un seul resultat */
+      i = strlen(p);
+      p = malloc(sizeof(char) * (3+strlen(ll->name+i)));
+      strcpy(p, ll->name+i);
       strcat(p, " ");
       return p;
    }
-   else if(match != 0)
+   else
    {
-      if((flags & VERBOSE))
+      /* Plusieurs resultats */
+      /* Afficher les resultats */
+      printf("\n");
+      p_ll = ll;
+      while(p_ll != NULL)
       {
-	 printf("\n");
-	 for(i = 0; i < match; i++)
-	    printf("%s\t", q[i]);
-	 printf("\n");
-	 printf("%s%s", prompt, str);
+	 printf("\033[36m%s\t\033[37m", p_ll->name);
+	 p_ll = p_ll->next;
       }
-      for(j = 0; j < strlen(q[0])-strlen(p); j++)
-      {
-	 for(i = 0; i < match; i++)
-	 {
-	    if(q[i][j+strlen(p)] != q[0][j+strlen(p)])
-	    {
-	       match = strlen(p);
-	       p = malloc(sizeof(char) * (strlen(q[0]+match)-j+2));
-	       strncpy(p, q[0]+match, j);
-	       p[j] = '\0';
-	       return p;
-	    }
-	 }
-      }
+      printf("\n");
+      printf("%s%s", prompt, str);
+      /* TODO : completion */
    }
+   free_file_completion(ll);
    return NULL;
 }
 /* }}} */
@@ -251,7 +240,10 @@ file_completion *add_file_completion(char *name, unsigned char type, file_comple
 {
    file_completion *new = malloc(sizeof(file_completion));
    struct stat file_stat;
-   new->name = name;
+   /* Il faut copier sinon l'information se
+    * perd quand on ferme le repertoire */
+   new->name = malloc(sizeof(char) * (1+strlen(name)));
+   strcpy(new->name, name);
    if(type == DT_LNK)
    {
       stat(name, &file_stat);
@@ -272,6 +264,7 @@ void free_file_completion(file_completion *liste)
    else
    {
       p = liste->next;
+      free(liste->name);
       free(liste);
       return free_file_completion(p);
    }

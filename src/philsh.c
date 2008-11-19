@@ -48,7 +48,7 @@ void init_env(void)
    setenv("HOME", user->pw_dir, 0);
    /* Si le PATH n'est pas fixé, il est impossible de le deviner
     * Dans ce cas on utilise un PATH classique UNIX */
-   if (getenv("PATH") == NULL)
+   if (NULL == getenv("PATH"))
       setenv("PATH", "/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin", 0);
    return;
 }
