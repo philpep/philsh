@@ -12,28 +12,28 @@
 #
 # Philsh est un interpreteur de commande minimaliste
 # - Il à pour unique but de m'apprendre à programmer
-#   en C et à me servir de svn, de vim, des Makefiles etc.
+#   en C et à me servir de git, de vim, de cmake etc.
 # - Si vous lisez ce code, sachez que je n'ai jamais suivis
 #   de cours de programmation (et que je n'en suivrais probablement
 #   jamais), donc si vous voyez une érreur, ou un defaut dans
 #   mes fonction, ou si vous avez un conseil surtout n'hésitez pas à vous 
 #   faire prof et à m'envoyer un mail.
-#   - Pour ne pas executer une built-in commande, mettez
-#    '_' avant la commande. Par exemple pour executer /bin/which
-#    faites _which (Plus utilisé temporairement)
 #   
 #   DEPENDANCE :
-#   - CMake >= 2.6
+#   - cmake >= 2.6
+#   - xmlto asciidoc (OPTIONEL, pour la génération de la page de man)
 #
 #   UTILISATION :
+#   - Recuperer les sources git : git clone git://tux-atome.fr/philsh.git
 #   - mkdir philsh/build && cd philsh/build
 #   - cmake ..
 #   - make
 #   - sudo make install si vous souhaitez l'installer
 #   - le fait de compiler dans 'build' laisse tout les autre dossiers "propres" ;)
-#   - lancez le via ./philsh (dans un vrai shell :)
+#   - Lancez le avec ./philsh ou philsh (si vous l'avez installé)
 #   - N'oubliez pas de lire le man, puis philsh --help vous donnera quelques infos utiles
 #     Enfin, jetez un coup d'oeil à philshrc.example
+#   - Un ebuild pour Gentoo est disponible sur l'overlay de rhaamo (sangor)
 #
 #
 #===========================#
@@ -46,18 +46,10 @@
 #===========================#
 #
 # - faites un cd lien_symbolique puis un cd ..
-# - Executez philsh sur un petit terminal
 # - Faites un ctrl-z sur un processus fils...
-# - ctrl-D ---> Prompt infini....
-# - ctrl-C --->Ne me quitte pas
-#
-#
-#===========#
-# CHANGELOG #
-#===========#
-# Premiere version par Philpep
-# Systeme de compilation via CMake par rhaamo. <markocpc@gmail.com>
-#
+# - Pas de support des processus : fg, bg etc...
+# - Pas de support de && ni de < et <<
+# - Rapports de bugs : <philippe.pepiot@gmail.com> ou <markocpc@gmail.com>
 #
 #
 # vim: ts=4 filetype=sh

@@ -15,6 +15,7 @@
 /* Cette fonction prend une chaine brute et la transforme
  * en une liste d'instructions
  * Elle est assez complexe, mais elle fonctionne plutôt bien */
+/* {{{ creat_liste_instruction() */
 file_instruction *creat_liste_instruction(char *saisie)
 {
    char *p, *q, *r;
@@ -106,9 +107,11 @@ file_instruction *creat_liste_instruction(char *saisie)
    liste = add_instruction(liste, q, NULL, NOPIPE | NORED | NOCOND);
    return liste;
 }
+/* }}} */
 
 /* Remplis une instruction et la colle en bout de file, c'est
  * ici qu'on affecte l'alias s'il existe */
+/* {{{ add_instruction() */
 file_instruction *add_instruction(file_instruction *liste, char *saisie, char *file, unsigned int flags)
 {
    int argc;
@@ -179,8 +182,10 @@ file_instruction *add_instruction(file_instruction *liste, char *saisie, char *f
    p->next = new;
    return liste;
 }
+/* }}} */
 
 /* Libère totalement la liste */
+/* {{{ free_file_instruction() */
 void free_file_instruction(file_instruction *liste)
 {
    file_instruction *p, *q;
@@ -199,8 +204,11 @@ void free_file_instruction(file_instruction *liste)
    }
    return;
 }
+/* }}} */
 
+/* Affiche la liste sur stdin pour debug */
 #ifdef DEBUG
+/* {{{ afficher_liste_instruction() */
 void afficher_liste_instruction(file_instruction *liste)
 {
    int i = 0, j;
@@ -235,6 +243,7 @@ void afficher_liste_instruction(file_instruction *liste)
    }
    return;
 }
+/* }}} */
 #endif
 
 /* Cette fonction retourne le nombre de mots d'une saisie
@@ -242,6 +251,7 @@ void afficher_liste_instruction(file_instruction *liste)
  * Puis elle met la longeur du plus long
  * mot dans lenght, pour nous permettre de faire un malloc
  * efficace ensuite */
+/* {{{ compter_mots() */
 int compter_mots(char *saisie, size_t *lenght)
 {
    char *p = strchr(saisie, '\0');
@@ -284,12 +294,14 @@ int compter_mots(char *saisie, size_t *lenght)
    *lenght = lenght_max;
    return words;
 }
+/* }}} */
 
 /* Cette fonction alloue argv selon le nombre de mot récuperé par
  * compter_mots(), puis alloue chaque argv[i] d'une taille de buf_size
  * qu'on a aussi récuperé par compter_mots et qui correspond a la
  * longeur du mot le plus long. Ainsi on est sur d'utiliser juste
  * ce qu'il faut en memoire */
+/* {{{ parse_saisie() */
 int parse_saisie(char *saisie, size_t buf_size, char **argv)
 {
    char *p, *buffer;
@@ -337,6 +349,7 @@ int parse_saisie(char *saisie, size_t buf_size, char **argv)
    free(buffer);
    return j;
 }
+/* }}} */
 
 
 

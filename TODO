@@ -5,7 +5,7 @@ rhaamo :
     · Remanier l'aide.
 
 philpep :
-  . Gestion des signaux !
+  . Gestion des processus ! fg, bg, ctrl+z
   . Meilleure prise de saisie --> ncurses.h
   . Prompt modifiable.
   . A l'installation, il faut patcher /etc/shells pour y mettre philsh
@@ -14,11 +14,6 @@ philpep :
   . Ordre de prioritées pour une bonne interpretation de la commande
      - Gestion du '$'
      - Gestion des redirections inverses '<' '<<?' Je pense que c'est moins dur que le reste :D
-     - Gestion des conditions '||', '&&' ---> ça doit pas être si dûr que ça ;)
+     - Gestion de la conditions '&&' ---> ça doit pas être si dûr que ça ;)
      - Gestion du '*' --> ça n'a pas l'air aussi facile qu'on le pense...
-
-BUGS:
-  On FreeBSD :
-    CMakeFiles/philsh.dir/src/int/pwd.c.o(.text+0xa): In function `get_current_dir':
-    /home/marc/dev/philsh/src/int/pwd.c:22: undefined reference to `get_current_dir_name'
 
