@@ -117,7 +117,7 @@ void philsh(void)
 	 mode_raw(1);
 	 c = getchar();
 	 mode_raw(0);
-	 if(c == 9 && d == 9)
+	 if(c == PHILSH_KEY_TAB && d == PHILSH_KEY_TAB)
 	    flags = VERBOSE;
 	 else
 	 {
@@ -127,16 +127,16 @@ void philsh(void)
 
 	 /* fin de saisie ou ctrl+c
 	  * ou ctrl+z */
-	 if(c == 13 || c == 3 || c == 26)
+	 if(c == PHILSH_KEY_ENTER || c == PHILSH_KEY_CTRLZ || c == PHILSH_KEY_CTRLC)
 	 {
 	    printf("\n");
 	    break;
 	 }
 	 /* ctrl+d --> exit */
-	 if(c == 4)
+	 if(c == PHILSH_KEY_CTRLD)
 	    exit(1);
 	 /* TAB */
-	 if (c == 9)
+	 if (c == PHILSH_KEY_TAB)
 	 {
 	    saisie[i] = '\0';
 	    completion = file_complete(saisie, flags, prompt);
@@ -153,7 +153,7 @@ void philsh(void)
 	    continue;
 	 }
 	 /* BACK */
-	 if(c == 127)
+	 if(c == PHILSH_KEY_BACK)
 	 {
 	    if(i == 0)
 	       continue;
@@ -162,7 +162,7 @@ void philsh(void)
 	    continue;
 	 }
 	 /* Special keys */
-	 if(c == 27)
+	 if(c == PHILSH_KEY_SPECIALS)
 	 {
 	    getchar();
 	    getchar();
