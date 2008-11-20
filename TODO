@@ -18,3 +18,6 @@ philpep :
      - Gestion du '*' --> ça n'a pas l'air aussi facile qu'on le pense...
   . Supprimer les doublons dans la completion
 
+
+bugs :
+  . GROS BUG ENORME : le pipe ne marche plus, exemple "ls -l | grep foo", produit une boucle infinie /o\
