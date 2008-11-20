@@ -17,6 +17,28 @@ void mode_raw(int activer);
 #define PHILSH_KEY_ENTER 13
 #define PHILSH_KEY_BACK 127
 #define PHILSH_KEY_SPECIALS 27
+#define PHILSH_KEY_UP 65
+#define PHILSH_KEY_DOWN 66
+
+/* efface la saisie de l'ecran */
+#define clear_saisie() while(i != 0) \
+{ \
+   printf("\b \b"); \
+   i--; \
+} \
+
+typedef struct _philsh_history
+{
+   char *cmd;
+   struct _philsh_history *next;
+   struct _philsh_history *prev;
+
+} philsh_history;
+
+philsh_history *add_to_history(char *cmd, philsh_history *liste);
+void free_history(philsh_history *liste);
+void print_history(philsh_history *liste);
+
 
 
 

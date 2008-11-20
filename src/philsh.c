@@ -104,6 +104,7 @@ void philsh(void)
    int ret = 0;
    unsigned int flags = NOVERBOSE;
    file_instruction *liste_instruction = NULL;
+   philsh_history *history = NULL, *p_history = NULL;
    saisie = malloc(sizeof(char) * SIZE_SAISIE);
    for(;;)
    {
@@ -165,7 +166,25 @@ void philsh(void)
 	 if(c == PHILSH_KEY_SPECIALS)
 	 {
 	    getchar();
-	    getchar();
+	    switch (getchar())
+	    {
+	       case PHILSH_KEY_UP:
+		  if(p_history != NULL)
+		  {
+		     clear_saisie();
+		     strcpy(saisie, p_history->cmd);
+		     printf("%s", saisie);
+		     p_history = p_history->next;
+		     i = strlen(saisie);
+		     continue;
+		  }
+		  break;
+	       case PHILSH_KEY_DOWN:
+		  /* TODO */
+		  break;
+	       default:
+		  break;
+	    }
 	    continue;
 	 }
 	 saisie[i++] = c;
@@ -173,6 +192,13 @@ void philsh(void)
       }
       mode_raw(0);
       saisie[i] = '\0';
+      history = add_to_history(saisie, history);
+      p_history = history;
+      if(!strcmp(saisie, "history"))
+      {
+	 print_history(history);
+	 continue;
+      }
       liste_instruction = creat_liste_instruction(saisie);
       ret = exec_file(liste_instruction);
 #ifdef DEBUG
@@ -181,6 +207,7 @@ void philsh(void)
       free_file_instruction(liste_instruction);
    }
    free(saisie);
+   free_history(history);
    return;
 }
 /* }}} */
@@ -291,6 +318,51 @@ void afficher_aide(void)
    return;
 }
 
+/* }}} */
+
+
+/* {{{ Gestion de la liste doublement chainnée de
+ * l'historique */
+philsh_history *add_to_history(char *cmd, philsh_history *liste)
+{
+   philsh_history *new;
+   if(cmd == NULL || cmd[0] == '\0')
+      return liste;
+   new = malloc(sizeof(philsh_history));
+   new->cmd = malloc(sizeof(char) * (1+strlen(cmd)));
+   strcpy(new->cmd, cmd);
+   new->next = liste;
+   if(liste != NULL)
+      liste->prev = new;
+   new->prev = NULL;
+   return new;
+}
+
+void free_history(philsh_history *liste)
+{
+   philsh_history *p, *q;
+   p = liste;
+   while(p != NULL)
+   {
+      free(p->cmd);
+      q = p;
+      p = p->next;
+      free(q);
+   }
+   return;
+}
+
+void print_history(philsh_history *liste)
+{
+   philsh_history *p = liste;
+   size_t i = 0;
+   while(p != NULL)
+   {
+      printf("%d : %s\n", ++i, p->cmd);
+      p = p->next;
+   }
+   return;
+}
 /* }}} */
 /* vim:fdm=marker:
 */
