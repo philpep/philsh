@@ -67,7 +67,7 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 	 p++;
       /* Si on cherche une commande dans $PATH */
       if(*p != '/' && *p != '.')
-	 return comand_complete(str, flags, prompt);
+	 return comand_complete(str, prompt);
       /* Sinon on continu sur la completion de fichier */
    }
    /* On grille les espaces */
@@ -184,7 +184,7 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
 
 /* Completion des commandes */
 /* {{{ comand_complete() */
-char *comand_complete(char *str, unsigned int flags, char *prompt)
+char *comand_complete(char *str, char *prompt)
 {
    file_completion *ll = NULL, *p_ll;
    char *p  = str;
@@ -238,8 +238,20 @@ char *comand_complete(char *str, unsigned int flags, char *prompt)
 /* {{{ fonctions de traitement de la liste */
 file_completion *add_file_completion(char *name, unsigned char type, file_completion *liste)
 {
-   file_completion *new = malloc(sizeof(file_completion));
+   file_completion *new = NULL, *p_ll = liste;
    struct stat file_stat;
+   /* On regarde si l'ellement n'est pas
+    * déjà dans la liste */
+   if(liste != NULL)
+   {
+      while(p_ll != NULL)
+      {
+	 if(!strcmp(name, p_ll->name))
+	    return liste;
+	 p_ll = p_ll->next;
+      }
+   }
+   new = malloc(sizeof(file_completion));
    /* Il faut copier sinon l'information se
     * perd quand on ferme le repertoire */
    new->name = malloc(sizeof(char) * (1+strlen(name)));

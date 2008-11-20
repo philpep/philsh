@@ -17,7 +17,7 @@ typedef struct _file_completion {
 file_completion *command_completion;
 void init_command_name(void);
 char *file_complete(char *str, unsigned int flags, char *prompt);
-char *comand_complete(char *str, unsigned int flags, char *prompt);
+char *comand_complete(char *str, char *prompt);
 
 file_completion *add_file_completion(char *name, unsigned char type, file_completion *liste);
 void free_file_completion(file_completion *liste);
