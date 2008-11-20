@@ -52,19 +52,11 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
    unsigned char type;
    struct stat file_stat;
    file_completion *ll = NULL, *p_ll = NULL;
-   /* Si la commande est cd : completion uniquement
-    * sur les dossiers */
-   /*
-      if(!strncmp(str, "cd ", 3))
-      flags |= DIR_ONLY;
-      */
    /* S'il n'y a pas d'espaces, c'est qu'on cherche
     * une commande */
    if(p == NULL)
    {
       p = str;
-      while(*p == ' ')
-	 p++;
       /* Si on cherche une commande dans $PATH */
       if(*p != '/' && *p != '.')
 	 return comand_complete(str, prompt);
