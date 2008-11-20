@@ -35,12 +35,16 @@ const struct builtin builtin_command[] =
  * les créer... En effet, si on lance le programme
  * comme ceci : env -i philsh, tous les getenv()
  * retournent NULL */
+/* TODO : tester si l'environnement est
+ * accessible */
 /* {{{ init_env */
 void init_env(void)
 {
    /* L'uid sous lequel tourne philsh */
    uid_t uid = getuid();
    struct passwd *user;
+   struct utsname host;
+   uname(&host);
    /* On recupère l'entrée correspondante
     * dans /etc/passwd */
    user = getpwuid(uid);
@@ -49,7 +53,16 @@ void init_env(void)
    /* Si le PATH n'est pas fixé, il est impossible de le deviner
     * Dans ce cas on utilise un PATH classique UNIX */
    if (NULL == getenv("PATH"))
-      setenv("PATH", "/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin", 0);
+   {
+      /* PATH optimised for FreeBSD */
+      if(!strcmp(host.sysname, "FreeBSD"))
+	 setenv("PATH", "/usr/local/bin:/usr/local/sbin:/usr/games/bin:/usr/bin:/usr/sbin:/bin:/sbin:/usr/games", 0);
+      else
+	 /* Ce PATH devrait marcher de façon minimale
+	  * pour la plupart des OS basés sur UNIX */
+	 setenv("PATH", "/usr/local/bin:/usr/bin:/bin:/opt/bin:/sbin", 0);
+      fprintf(stderr,"Philsh: WARNING, PATH variable don't exist\nSo we will use this one : %s\n", getenv("PATH"));
+   }
    return;
 }
 /* }}} */
@@ -111,7 +124,7 @@ void philsh(void)
 	    d = c;
 	    flags = NOVERBOSE;
 	 }
-	    
+
 	 /* fin de saisie ou ctrl+c
 	  * ou ctrl+z */
 	 if(c == 13 || c == 3 || c == 26)
@@ -126,7 +139,7 @@ void philsh(void)
 	 if (c == 9)
 	 {
 	    saisie[i] = '\0';
-	       completion = file_complete(saisie, flags, prompt);
+	    completion = file_complete(saisie, flags, prompt);
 	    if(completion != NULL)
 	    {
 	       if(strlen(completion) < SIZE_SAISIE-i)
