@@ -32,9 +32,9 @@ struct lljobs *liste_jobs = NULL;
 /* {{{ exec_file_instruction() */
 int exec_file(file_instruction *liste)
 {
-   char *ptr, *path;
+   char *path;
    pid_t pid;
-   int bg = 0, fd, ret, p[2], status;
+   int fd, ret, p[2], status;
    const struct builtin *p_builtin;
    extern const struct builtin builtin_command[];
    extern lljobs *liste_jobs;
@@ -57,24 +57,6 @@ int exec_file(file_instruction *liste)
       }
       p_builtin++;
    }
-   /* *p est le dernier caractère du dernier argument de la liste
-    * On veut voir si *p == &, pour savoir s'il faut lancer la commande
-    * en background...
-    * TODO : Pourquoi ne pas l'intergrer dans liste->red_type ?
-    */
-   ptr = &liste->argv[liste->argc-1][strlen(liste->argv[liste->argc-1])-1];
-   if(*ptr == '&')
-   {
-      bg = 1;
-      /* machin & != machin& */
-      if(ptr == liste->argv[liste->argc-1])
-      {
-	 liste->argc--; /* TODO : fuite memoire ici ? */
-	 liste->argv[liste->argc] = NULL;
-      }
-      else
-	 *ptr = '\0';
-   }
    /* Duplication du processus */
    if(-1 == pipe(p))
    {
@@ -85,7 +67,7 @@ int exec_file(file_instruction *liste)
    if(pid == 0)
    {
       /* FILS */
-      if(bg)
+      if(liste->flags & BG)
       {
 	 fd = open("/dev/null", O_RDONLY);
 	 if(fd == -1)
@@ -175,17 +157,17 @@ int exec_file(file_instruction *liste)
        * jobs, execute la prochaine instruction
        * ou retourne la valeur de retour
        * TODO : Lire man signal :) */
-      if(!bg)
-      {
-	 signal(SIGINT, SIG_IGN);
-	 while(!WaitForChild(pid, &ret)); /*  cf un peu plus bas */
-	 signal(SIGINT, HandleInterrupt);
-      }
-      else
+      if(liste->flags & BG)
       {
 	 /* On l'ajoute à la liste des jobs, et on affiche un joli message */
 	 liste_jobs = add_job(liste_jobs, liste->argv[0], pid);
 	 printf("[\033[36m%d\033[37m] : \033[34m%s\033[37m\n", pid, liste->argv[0]);
+      }
+      else
+      {
+	 signal(SIGINT, SIG_IGN);
+	 while(!WaitForChild(pid, &ret)); /*  cf un peu plus bas */
+	 signal(SIGINT, HandleInterrupt);
       }
       if(liste->flags & PIPE)
       {
@@ -200,11 +182,18 @@ int exec_file(file_instruction *liste)
       {
 	 if((liste->flags & OR) && ret == 0)
 	    return ret;
+	 else if((liste->flags & AND) && ret != 0)
+	    return ret;
 	 else
 	    return exec_file(liste->next);
       }
       else
-	 return ret;
+      {
+	 if(liste->flags & BG)
+	    return 0;
+	 else
+	    return ret;
+      }
    }
    else
       perror("fork()");

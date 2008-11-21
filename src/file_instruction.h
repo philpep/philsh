@@ -1,7 +1,6 @@
 #ifndef _FILE_INSTRUCTION_HEADER
 #define _FILE_INSTRUCTION_HEADER
 
-
 #define RED_ADD 0
 #define RED_CREAT 2
 #define NORED 4
@@ -11,6 +10,7 @@
 #define OR 64
 #define NOCOND 128
 #define LOCAL_CMD 256
+#define BG 512
 
 typedef struct _file_instruction
 {

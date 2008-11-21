@@ -103,6 +103,22 @@ file_instruction *creat_liste_instruction(char *saisie)
 	 q = p;
 	 continue;
       }
+      if(*p == '&' && (!gui))
+      {
+	 *p = '\0';
+	 if(*(++p) == '&')
+	 {
+	    p++;
+	    flags = NORED | NOPIPE | AND;
+	 }
+	 else
+	    flags = NORED | NOPIPE | NOCOND | BG;
+	 liste = add_instruction(liste, q, NULL, flags);
+	 while(*p == ' ')
+	    p++;
+	 q = p;
+	 continue;
+      }
    }
    liste = add_instruction(liste, q, NULL, NOPIPE | NORED | NOCOND);
    return liste;
@@ -238,6 +254,8 @@ void afficher_liste_instruction(file_instruction *liste)
 	 printf("NOCOND ");
       if(p->flags & LOCAL_CMD)
 	 printf("LOCAL_CMD ");
+      if(p->flags & BG)
+	 printf("BG ");
       printf("\n");
       p = p->next;
    }
