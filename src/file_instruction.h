@@ -1,7 +1,6 @@
 #ifndef _FILE_INSTRUCTION_HEADER
 #define _FILE_INSTRUCTION_HEADER
 
-#define DEBUG
 #define RED_ADD 0
 #define RED_CREAT 2
 #define NORED 4
