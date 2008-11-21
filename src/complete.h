@@ -1,8 +1,6 @@
 #ifndef _COMPLETE_HEARDER
 #define _COMPLETE_HEARDER
 
-/* au maximum 100 solutions de completions */
-#define MAX_COMPLETION 100
 
 #define VERBOSE 0
 #define NOVERBOSE 2

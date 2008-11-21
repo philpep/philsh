@@ -101,7 +101,7 @@ void philsh(void)
 {
    char *prompt, *saisie, c, d = -1, *completion;
    size_t i;
-   int ret = 0;
+   int ret = 0, f[2];
    unsigned int flags = NOVERBOSE;
    file_instruction *liste_instruction = NULL;
    philsh_history *history = NULL, *p_history = NULL;
@@ -112,6 +112,7 @@ void philsh(void)
       /* On affiche le prompt */
       prompt = set_prompt(ret);
       printf("%s", prompt);
+      fflush(stdin);
       /* On recupère la saisie */
       while(i < SIZE_SAISIE)
       {
@@ -192,6 +193,9 @@ void philsh(void)
       }
       mode_raw(0);
       saisie[i] = '\0';
+      fflush(stdin);
+      f[0] = dup(1);
+      f[1] = dup(0);
       history = add_to_history(saisie, history);
       p_history = history;
       if(!strcmp(saisie, "history"))
@@ -204,6 +208,10 @@ void philsh(void)
 #ifdef DEBUG
       afficher_liste_instruction(liste_instruction);
 #endif
+      close(1);
+      dup(f[0]);
+      close(0);
+      dup(f[1]);
       free_file_instruction(liste_instruction);
    }
    free(saisie);

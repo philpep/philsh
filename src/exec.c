@@ -77,7 +77,10 @@ int exec_file(file_instruction *liste)
    }
    /* Duplication du processus */
    if(-1 == pipe(p))
+   {
       perror("pipe()");
+      return -1;
+   }
    pid = fork();
    if(pid == 0)
    {

@@ -17,6 +17,3 @@ philpep :
      - Gestion de la conditions '&&' ---> ça doit pas être si dûr que ça ;)
      - Gestion du '*' --> ça n'a pas l'air aussi facile qu'on le pense...
 
-
-bugs :
-  . GROS BUG ENORME : le pipe ne marche plus, exemple "ls -l | grep foo", produit une boucle infinie /o\
