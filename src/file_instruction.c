@@ -53,7 +53,7 @@ file_instruction *creat_liste_instruction(char *saisie)
 	 while(*p == ' ')
 	    p++;
 	 r = p;
-	 while(*r != '\0'&&*r != ' '&&*r != ';'&&*r != '|')
+	 while(*r != '\0'&&*r != ' '&&*r != ';'&&*r != '|' &&*r != '&')
 	    r++;
 	 if(*r == '\0')
 	    return liste = add_instruction(liste, q, p, flags);
@@ -61,6 +61,11 @@ file_instruction *creat_liste_instruction(char *saisie)
 	 {
 	    flags &= ~NOPIPE;
 	    flags |= PIPE;
+	 }
+	 if(*r == '&')
+	 {
+	    flags &= ~NOCOND;
+	    flags |= AND;
 	 }
 	 *r = '\0';
 	 r++;
@@ -78,6 +83,20 @@ file_instruction *creat_liste_instruction(char *saisie)
 	    {
 	       flags &= ~NOPIPE;
 	       flags |= PIPE;
+	    }
+	 }
+	 if(*r == '&')
+	 {
+	    if(*(r+1) == '&')
+	    {
+	       flags &= ~NOCOND;
+	       flags |= AND;
+	       r++;
+	    }
+	    else
+	    {
+	       flags |= BG;
+	       flags &= ~AND;
 	    }
 	 }
 	 liste = add_instruction(liste, q, p, flags);
