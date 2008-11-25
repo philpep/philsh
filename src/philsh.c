@@ -141,7 +141,7 @@ void philsh(void)
 	 if (c == PHILSH_KEY_TAB)
 	 {
 	    saisie[i] = '\0';
-	    completion = file_complete(saisie, flags, prompt);
+	    completion = try_complete(saisie, prompt);
 	    if(completion != NULL)
 	    {
 	       if(strlen(completion) < SIZE_SAISIE-i)

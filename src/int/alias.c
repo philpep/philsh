@@ -7,6 +7,7 @@
 #include <string.h> /* Pour strlen, strchr, strcmp, strcpy */
 #include <stdlib.h> /* Pour malloc, NULL, free */
 #include "alias.h"
+#include "../complete.h"
 
 
 /* Fonction qui est appelée lors de la création d'un alias */
@@ -59,6 +60,8 @@ int alias(int argc, char **argv)
    }
    /* L'alias n'existe pas ---> on le crée */
    liste_alias = add_alias(liste_alias, argv[1], p+1);
+   /* On rajoute l'alias dans la completion */
+   command_completion = add_file_completion(argv[1], 0, command_completion);
    return 0;
 }
 

@@ -12,7 +12,39 @@
 #include <sys/stat.h>
 #include <dirent.h>
 #include "complete.h"
+#include "int/internal.h"
+#include "int/alias.h"
 
+
+char *try_complete(char *str, char *prompt)
+{
+   char *p = str;
+   if(str == NULL)
+      return NULL;
+   while(' ' == *p)
+      p++;
+   if('\0' == *p)
+      return NULL;
+   p = strrchr(p, ' ');
+   /* S'il n'y a pas d'espaces, c'est qu'on cherche
+    * une commande */
+   if(p == NULL)
+   {
+      p = str;
+      /* Si on cherche une commande dans $PATH */
+      if(*p != '/' && *p != '.')
+	 return comand_complete(str, prompt);
+      /* Sinon on continue sur la completion de fichier */
+   }
+   if(!strncmp("cd ", p, 3))
+   {
+      printf("\nCD \n");
+      return file_complete(str, DIR_ONLY | VERBOSE, prompt);
+   }
+   else
+      return file_complete(str, VERBOSE, prompt);
+   return NULL;
+}
 /* Initialisation de la liste des commandes
  * une sorte de source profile */
 /* {{{ init_command_name() */
@@ -22,11 +54,15 @@ void init_command_name(void)
    char *dir_name;
    DIR *dir;
    struct dirent *file;
+   extern const struct builtin builtin_command[];
+   const struct builtin *p_builtin = builtin_command;
+   alias_ll *p_alias = liste_alias;
    if(command_completion)
       free_file_completion(command_completion);
    command_completion = NULL;
    strcpy(path, getenv("PATH"));
    dir_name = strtok(path, ":");
+   /* Commandes du PATH */
    while(dir_name != NULL)
    {
       if((dir = opendir(dir_name)))
@@ -36,6 +72,19 @@ void init_command_name(void)
 	 closedir(dir);
       }
       dir_name = strtok(NULL, ":");
+   }
+   free(path);
+   /* Builtin commandes */
+   while(p_builtin->name != NULL)
+   {
+      command_completion = add_file_completion(p_builtin->name, 0, command_completion);
+      p_builtin++;
+   }
+   /* Alias completion */
+   while(p_alias != NULL)
+   {
+      command_completion = add_file_completion(p_alias->name, 0, command_completion);
+      p_alias = p_alias->next;
    }
    return;
 }
@@ -52,16 +101,6 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
    unsigned char type;
    struct stat file_stat;
    file_completion *ll = NULL, *p_ll = NULL;
-   /* S'il n'y a pas d'espaces, c'est qu'on cherche
-    * une commande */
-   if(p == NULL)
-   {
-      p = str;
-      /* Si on cherche une commande dans $PATH */
-      if(*p != '/' && *p != '.')
-	 return comand_complete(str, prompt);
-      /* Sinon on continu sur la completion de fichier */
-   }
    /* On grille les espaces */
    while(*p == ' ')
       p++;
