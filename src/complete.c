@@ -37,10 +37,7 @@ char *try_complete(char *str, char *prompt)
       /* Sinon on continue sur la completion de fichier */
    }
    if(!strncmp("cd ", p, 3))
-   {
-      printf("\nCD \n");
       return file_complete(str, DIR_ONLY | VERBOSE, prompt);
-   }
    else
       return file_complete(str, VERBOSE, prompt);
    return NULL;
@@ -101,6 +98,8 @@ char *file_complete(char *str, unsigned int flags, char *prompt)
    unsigned char type;
    struct stat file_stat;
    file_completion *ll = NULL, *p_ll = NULL;
+   if(NULL == p)
+      p = str;
    /* On grille les espaces */
    while(*p == ' ')
       p++;
